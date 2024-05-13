@@ -1,0 +1,12 @@
+version: '2.19.1'
+services:
+  blockly:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    network_mode: myvps
+    ports:
+      - "3101:3101"
+    expose:
+      - "3101"
+    restart: always
