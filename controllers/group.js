@@ -106,7 +106,7 @@ exports.updateGroup = async (req, res) => {
                 ...meta_data
             }
         }
-        group.update_at = moment().format();
+        group.updated_at = moment().format();
         group.timestamp = moment().unix();
 
         const updatedGroup = await group.save();

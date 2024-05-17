@@ -155,9 +155,13 @@ router.get("/", controller.getAllBlocks);
  *                   description: Error message
  */
 
+router.get("/export", controller.exportBlocks);
+
 router.get("/:id", controller.getBlockById);
 
 router.post("/", controller.createBlock);
+
+router.post("/import", controller.importBlocks);
 
 router.patch("/:id", controller.updateBlock);
 

@@ -26,7 +26,7 @@ const controller = require("../controllers/collection");
  *           type: string
  *           format: date-time
  *           description: The timestamp of when the collection was created
- *         update_at:
+ *         updated_at:
  *           type: string
  *           format: date-time
  *           description: The timestamp of when the collection was last updated
@@ -38,7 +38,7 @@ const controller = require("../controllers/collection");
  *         name: Collection 1
  *         meta_data: {}
  *         created_at: '2024-05-20T10:00:00.000Z'
- *         update_at: '2024-05-20T10:00:00.000Z'
+ *         updated_at: '2024-05-20T10:00:00.000Z'
  *         timestamp: 1621486800
  */
 

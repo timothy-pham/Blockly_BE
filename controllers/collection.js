@@ -32,7 +32,7 @@ exports.createCollection = async (req, res) => {
             blocks,
             meta_data,
             created_at: moment().format(),
-            update_at: moment().format(),
+            updated_at: moment().format(),
             timestamp: moment().unix()
         });
         await collection.save();
@@ -69,7 +69,7 @@ exports.updateCollection = async (req, res) => {
         }
 
         // Cập nhật các trường hệ thống
-        collection.update_at = moment().format();
+        collection.updated_at = moment().format();
         collection.timestamp = moment().unix();
 
         // Lưu tài liệu đã cập nhật

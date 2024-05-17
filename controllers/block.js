@@ -2,6 +2,8 @@ const Block = require("../models/block");
 const Group = require("../models/group");
 const moment = require('moment');
 
+
+
 exports.getAllBlocks = async (req, res) => {
     try {
         const blocks = await Block.aggregate([
@@ -160,3 +162,41 @@ exports.deleteBlock = async (req, res) => {
         res.status(500).json({ message: error });
     }
 }
+
+
+exports.exportBlocks = async (req, res) => {
+    try {
+        const blocks = await Block.aggregate([
+            {
+                $sort: { block_id: 1 }
+            },
+            {
+                $project: {
+                    created_at: 0,
+                    updated_at: 0,
+                    __v: 0,
+                    _id: 0,
+                    timestamp: 0,
+                    block_id: 0,
+                }
+            }
+        ]);
+        res.set('Content-Type', 'application/json');
+        res.set('Content-Disposition', 'attachment; filename=data.json');
+        res.send(Buffer.from(JSON.stringify(blocks, null, 2)));
+    } catch (error) {
+        console.log("BLOCKS_GET_ERROR", error)
+        res.status(500).json({ message: error });
+    }
+};
+
+exports.importBlocks = async (req, res) => {
+    try {
+        const blocks = req.body;
+        await Block.insertMany(blocks);
+        res.status(201).json({ message: "Blocks imported successfully" });
+    } catch (error) {
+        console.log("BLOCKS_IMPORT_ERROR", error)
+        res.status(500).json({ message: error });
+    }
+};
