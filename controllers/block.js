@@ -2,8 +2,6 @@ const Block = require("../models/block");
 const Group = require("../models/group");
 const moment = require('moment');
 
-
-
 exports.getAllBlocks = async (req, res) => {
     try {
         const blocks = await Block.aggregate([
@@ -193,10 +191,36 @@ exports.exportBlocks = async (req, res) => {
 exports.importBlocks = async (req, res) => {
     try {
         const blocks = req.body;
-        await Block.insertMany(blocks);
+        await Block.create(blocks);
         res.status(201).json({ message: "Blocks imported successfully" });
     } catch (error) {
         console.log("BLOCKS_IMPORT_ERROR", error)
+        res.status(500).json({ message: error });
+    }
+};
+
+exports.checkAnswer = async (req, res) => {
+    try {
+        const { id, answer } = req.body;
+        const block = await Block.findOne({ block_id: id });
+        if (!block) {
+            return res.status(404).json({ message: "Block not found" });
+        }
+        if (answer === block.answer) {
+            res.status(200).json({
+                correct: true,
+                id,
+                answer: answer
+            });
+        } else {
+            res.status(200).json({
+                correct: false,
+                id,
+                answer: answer
+            });
+        }
+    } catch (error) {
+        console.log("BLOCKS_CHECK_ANSWER_ERROR", error)
         res.status(500).json({ message: error });
     }
 };

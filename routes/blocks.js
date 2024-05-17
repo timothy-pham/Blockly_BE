@@ -2,162 +2,13 @@ const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/block");
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     Block:
- *       type: object
- *       required:
- *        - name
- *        - slug
- *        - data
- *        - question
- *        - answer
- *        - level
- *        - meta_data
- *       properties:
- *         id:
- *           type: string
- *           description: The auto-generated id of the block
- *         name:
- *           type: string
- *           description: The block name
- *         slug:
- *           type: string
- *           description: The block slug
- *         data:
- *           type: object
- *           description: The block data
- *         question:
- *           type: string
- *           description: The block question
- *         answer:
- *           type: string
- *           description: The block answer
- *         level:
- *           type: number
- *           description: The block level
- *         meta_data:
- *           type: object
- *           description: The block meta data
- *       example:
- *         id: d5fE_asz
- *         name: Block 1
- *         slug: block-1
- *         data: {}
- *         question: What is this block about?
- *         answer: This block is about...
- *         level: 1
- *         meta_data: {}
- */
-
-/**
- * @swagger
- * tags:
- *   name: Blocks
- *   description: The blocks managing API
- */
-
-/**
- * @swagger
- * /blocks:
- *   get:
- *     summary: Returns the list of all the blocks
- *     tags: [Blocks]
- *     responses:
- *       200:
- *         description: The list of the blocks
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Block'
- */
-
 router.get("/", controller.getAllBlocks);
-
-/**
- * @swagger
- * /blocks:
- *   post:
- *     summary: Create a new block
- *     tags: [Blocks]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               data:
- *                 type: object
- *               question:
- *                 type: string
- *               answer:
- *                 type: string
- *               level:
- *                 type: number
- *               meta_data:
- *                 type: object
- *             example:
- *               name: Block 1
- *               data: {}
- *               question: What is this block about?
- *               answer: This block is about...
- *               level: 1
- *               meta_data: {}
- *     responses:
- *       200:
- *         description: New block created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 _id:
- *                   type: string
- *                   description: The auto-generated id of the block
- *                 name:
- *                   type: string
- *                   description: The block name
- *                 data:
- *                   type: object
- *                   description: The block data
- *                 question:
- *                   type: string
- *                   description: The block question
- *                 answer:
- *                   type: string
- *                   description: The block answer
- *                 level:
- *                   type: number
- *                   description: The block level
- *                 meta_data:
- *                   type: object
- *                   description: The block meta data
- *                 created_at:
- *                   type: string
- *                   format: date-time
- *                   description: The timestamp of when the block was created
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Error message
- */
 
 router.get("/export", controller.exportBlocks);
 
 router.get("/:id", controller.getBlockById);
+
+router.post("/check-answer", controller.checkAnswer);
 
 router.post("/", controller.createBlock);
 
@@ -168,3 +19,252 @@ router.patch("/:id", controller.updateBlock);
 router.delete("/:id", controller.deleteBlock);
 
 module.exports = router;
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Block
+ *     description: Block management routes
+ */
+
+/**
+ * @swagger
+ * /blocks:
+ *   get:
+ *     summary: Get all blocks
+ *     tags: [Block]
+ *     responses:
+ *       200:
+ *         description: Blocks data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Block'
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /blocks/export:
+ *   get:
+ *     summary: Export all blocks
+ *     tags: [Block]
+ *     responses:
+ *       200:
+ *         description: JSON file containing all blocks
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Block'
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /blocks/{id}:
+ *   get:
+ *     summary: Get block by ID
+ *     tags: [Block]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Block ID
+ *     responses:
+ *       200:
+ *         description: Block data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Block'
+ *       404:
+ *         description: Block not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /blocks/check-answer:
+ *   post:
+ *     summary: Check answer for a block
+ *     tags: [Block]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *               answer:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Answer correctness
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 correct:
+ *                   type: boolean
+ *                 id:
+ *                   type: string
+ *                 answer:
+ *                   type: string
+ *       404:
+ *         description: Block not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /blocks:
+ *   post:
+ *     summary: Create a new block
+ *     tags: [Block]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Block'
+ *     responses:
+ *       201:
+ *         description: Block created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Block'
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /blocks/import:
+ *   post:
+ *     summary: Import multiple blocks
+ *     tags: [Block]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               $ref: '#/components/schemas/Block'
+ *     responses:
+ *       201:
+ *         description: Blocks imported successfully
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /blocks/{id}:
+ *   patch:
+ *     summary: Update a block
+ *     tags: [Block]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Block ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Block'
+ *     responses:
+ *       200:
+ *         description: Block updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Block'
+ *       404:
+ *         description: Block not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /blocks/{id}:
+ *   delete:
+ *     summary: Delete a block
+ *     tags: [Block]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Block ID
+ *     responses:
+ *       200:
+ *         description: Block deleted successfully
+ *       404:
+ *         description: Block not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Block:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: The name of the block.
+ *         group_id:
+ *           type: number
+ *           description: The ID of the group this block belongs to.
+ *         data:
+ *           type: object
+ *           description: Additional data related to the block.
+ *         question:
+ *           type: string
+ *           description: The question associated with the block.
+ *         answers:
+ *           type: array
+ *           description: Array of possible answers for the question.
+ *           items:
+ *             type: string
+ *         level:
+ *           type: number
+ *           description: The difficulty level of the block.
+ *         meta_data:
+ *           type: object
+ *           description: Additional metadata for the block.
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: The timestamp of when the block was created.
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: The timestamp of when the block was last updated.
+ *         timestamp:
+ *           type: number
+ *           description: The Unix timestamp of when the block was created.
+ */

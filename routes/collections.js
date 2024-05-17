@@ -2,127 +2,10 @@ const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/collection");
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     Collection:
- *       type: object
- *       required:
- *         - name
- *         - blocks
- *         - type
- *       properties:
- *         id:
- *           type: string
- *           description: The auto-generated id of the collection
- *         name:
- *           type: string
- *           description: The collection name
- *         meta_data:
- *           type: object
- *           description: Additional metadata for the collection
- *         created_at:
- *           type: string
- *           format: date-time
- *           description: The timestamp of when the collection was created
- *         updated_at:
- *           type: string
- *           format: date-time
- *           description: The timestamp of when the collection was last updated
- *         timestamp:
- *           type: number
- *           description: The Unix timestamp of when the collection was created
- *       example:
- *         id: d5fE_asz
- *         name: Collection 1
- *         meta_data: {}
- *         created_at: '2024-05-20T10:00:00.000Z'
- *         updated_at: '2024-05-20T10:00:00.000Z'
- *         timestamp: 1621486800
- */
-
-/**
- * @swagger
- * tags:
- *   name: Collections
- *   description: The collections managing API
- */
-
-/**
- * @swagger
- * /collections:
- *   get:
- *     summary: Returns the list of all the collections
- *     tags: [Collections]
- *     responses:
- *       200:
- *         description: The list of the collections
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Collection'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Error message
- */
-
 
 router.get("/", controller.getAllCollections);
 
 router.get("/:id", controller.getCollectionById);
-
-
-/**
- * @swagger
- * /collections:
- *   post:
- *     summary: Create a new collection
- *     tags: [Collections]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               type:
- *                 type: string
- *                 enum: [practice, competition, quiz]
- *               meta_data:
- *                 type: object
- *             example:
- *               name: Collection 1
- *               meta_data: {"description": "This is a collection"}
- *     responses:
- *       201:
- *         description: New collection created successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Collection'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Error message
- */
 
 router.post("/", controller.createCollection);
 
@@ -131,3 +14,187 @@ router.patch("/:id", controller.updateCollection);
 router.delete("/:id", controller.deleteCollection);
 
 module.exports = router;
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Collection:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: The name of the collection.
+ *           example: My Collection
+ *         meta_data:
+ *           type: object
+ *           description: Additional metadata for the collection.
+ *           example: {}
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: The timestamp of when the collection was created.
+ *           example: '2024-05-17T12:30:45.000Z'
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: The timestamp of when the collection was last updated.
+ *           example: '2024-05-17T12:30:45.000Z'
+ *         timestamp:
+ *           type: number
+ *           description: The Unix timestamp of when the collection was created.
+ *           example: 1621260645
+ */
+
+/**
+ * @swagger
+ * tags:
+ *   name: Collection
+ *   description: API endpoints for managing collections
+ */
+
+/**
+ * @swagger
+ * /collections:
+ *   get:
+ *     summary: Retrieve all collections
+ *     tags: [Collection]
+ *     responses:
+ *       200:
+ *         description: A list of collections
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Collection'
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /collections/{id}:
+ *   get:
+ *     summary: Retrieve a single collection by ID
+ *     tags: [Collection]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Collection ID
+ *     responses:
+ *       200:
+ *         description: A single collection object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Collection'
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /collections:
+ *   post:
+ *     summary: Create a new collection
+ *     tags: [Collection]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Collection'
+ *     responses:
+ *       201:
+ *         description: The created collection object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Collection'
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /collections/{id}:
+ *   patch:
+ *     summary: Update a collection by ID
+ *     tags: [Collection]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Collection ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Collection'
+ *     responses:
+ *       200:
+ *         description: The updated collection object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Collection'
+ *       404:
+ *         description: Collection not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /collections/{id}:
+ *   delete:
+ *     summary: Delete a collection by ID
+ *     tags: [Collection]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Collection ID
+ *     responses:
+ *       200:
+ *         description: Collection deleted successfully
+ *       404:
+ *         description: Collection not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Collection:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: The name of the collection.
+ *         meta_data:
+ *           type: object
+ *           description: Additional metadata for the collection.
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: The timestamp of when the collection was created.
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: The timestamp of when the collection was last updated.
+ *         timestamp:
+ *           type: number
+ *           description: The Unix timestamp of when the collection was created.
+ */
