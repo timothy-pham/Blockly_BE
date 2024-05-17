@@ -4,7 +4,24 @@ const moment = require('moment');
 
 exports.getAllGroups = async (req, res) => {
     try {
-        const groups = await Group.find();
+        const groups = await Group.aggregate([
+            {
+                $lookup: {
+                    from: 'collections',
+                    localField: 'collection_id',
+                    foreignField: 'collection_id',
+                    as: 'collection'
+                }
+            },
+            {
+                $project: {
+                    collection_id: 0
+                }
+            },
+            {
+                $sort: { group_id: 1 }
+            }
+        ]);
         res.status(200).json(groups);
     } catch (error) {
         console.log("GROUPS_GET_ERROR", error)
@@ -15,8 +32,26 @@ exports.getAllGroups = async (req, res) => {
 exports.getGroupById = async (req, res) => {
     try {
         const { id } = req.params;
-        const group = await Group.find({ group_id: id })
-        res.json(group).status(200);
+        const group = await Group.aggregate([
+            {
+                $match: { group_id: parseInt(id) }
+            },
+            {
+                $lookup: {
+                    from: 'collections',
+                    localField: 'collection_id',
+                    foreignField: 'collection_id',
+                    as: 'collection'
+                }
+            },
+            {
+                $project: {
+                    collection_id: 0
+                }
+            },
+        ]);
+        const data = group[0];
+        res.json(data).status(200);
     } catch (error) {
         console.log("GROUPS_GET_ERROR", error)
         res.status(500).json({ message: error });

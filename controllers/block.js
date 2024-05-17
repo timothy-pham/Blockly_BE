@@ -4,7 +4,39 @@ const moment = require('moment');
 
 exports.getAllBlocks = async (req, res) => {
     try {
-        const blocks = await Block.find();
+        const blocks = await Block.aggregate([
+            {
+                $lookup: {
+                    from: 'groups',
+                    localField: 'group_id',
+                    foreignField: 'group_id',
+                    as: 'group'
+                }
+            },
+            {
+                $unwind: '$group'
+            },
+            {
+                $lookup: {
+                    from: 'collections',
+                    localField: 'group.collection_id',
+                    foreignField: 'collection_id',
+                    as: 'group.collection'
+                }
+            },
+            {
+                $unwind: '$group.collection'
+            },
+            {
+                $project: {
+                    group_id: 0,
+                    'group.collection_id': 0
+                }
+            },
+            {
+                $sort: { block_id: 1 }
+            }
+        ]);
         res.status(200).json(blocks);
     } catch (error) {
         console.log("BLOCKS_GET_ERROR", error)
@@ -15,10 +47,41 @@ exports.getAllBlocks = async (req, res) => {
 exports.getBlockById = async (req, res) => {
     try {
         const { id } = req.params;
-        const block = await Block.find({
-            block_id: id
-        })
-        res.status(200).json(block);
+        const block = await Block.aggregate([
+            {
+                $match: { block_id: parseInt(id) }
+            },
+            {
+                $lookup: {
+                    from: 'groups',
+                    localField: 'group_id',
+                    foreignField: 'group_id',
+                    as: 'group'
+                }
+            },
+            {
+                $unwind: '$group'
+            },
+            {
+                $lookup: {
+                    from: 'collections',
+                    localField: 'group.collection_id',
+                    foreignField: 'collection_id',
+                    as: 'group.collection'
+                }
+            },
+            {
+                $unwind: '$group.collection'
+            },
+            {
+                $project: {
+                    group_id: 0,
+                    'group.collection_id': 0
+                }
+            },
+        ]);
+        const data = block[0];
+        res.status(200).json(data);
     } catch (error) {
         console.log("BLOCKS_GET_ERROR", error)
         res.status(500).json({ message: error });
