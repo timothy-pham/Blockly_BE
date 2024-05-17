@@ -56,6 +56,8 @@ app.use("/", require("./routes/index"));
 app.use("/collections", require("./routes/collections"));
 app.use("/groups", require("./routes/groups"));
 app.use("/blocks", require("./routes/blocks"));
+app.use("/users", require("./routes/users"));
+app.use("/auth", require("./routes/auth"));
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`The server is running on http://localhost:${PORT}`));
