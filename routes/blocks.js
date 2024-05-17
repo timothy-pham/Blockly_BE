@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Block = require("../models/block");
-const moment = require('moment');
+const controller = require("../controllers/block");
 
 /**
  * @swagger
@@ -77,15 +76,7 @@ const moment = require('moment');
  *                 $ref: '#/components/schemas/Block'
  */
 
-router.get("/", async (req, res) => {
-    try {
-        const blocks = await Block.find();
-        res.status(200).json(blocks);
-    } catch (error) {
-        console.log("BLOCKS_GET_ERROR", error)
-        res.status(500).json({ message: error });
-    }
-});
+router.get("/", controller.getAllBlocks);
 
 /**
  * @swagger
@@ -164,22 +155,12 @@ router.get("/", async (req, res) => {
  *                   description: Error message
  */
 
-router.post("/", async (req, res) => {
-    try {
-        const { name, data, question, answer, level, meta_data } = req.body;
-        const block = new Block({
-            name, data, question, answer, level, meta_data,
-            // slug: slugify(name, { locale: 'vi', lower: true }),
-            created_at: moment().format('MM/DD/YYYY, hh:mm:ss'),
-            updated_at: moment().format('MM/DD/YYYY, hh:mm:ss'),
-            timestamp: moment().unix()
-        });
-        const newBlock = await block.save();
-        res.status(200).json(newBlock);
-    } catch (error) {
-        console.log("BLOCKS_POST_ERROR", error)
-        res.status(500).json({ message: error });
-    }
-});
+router.get("/:id", controller.getBlockById);
+
+router.post("/", controller.createBlock);
+
+router.patch("/:id", controller.updateBlock);
+
+router.delete("/:id", controller.deleteBlock);
 
 module.exports = router;

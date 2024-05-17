@@ -1,27 +1,28 @@
 const mongoose = require('mongoose');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
-const blockSchema = new mongoose.Schema({
-    name: {
+
+const historySchema = new mongoose.Schema({
+    type: {
         type: String,
+        required: true,
+        enum: ['normal', 'solo', 'multiplayer']
+    },
+    user_id: {
+        type: Number,
+    },
+    room_id: {
+        type: Number,
+    },
+    collection_id: {
+        type: Number,
         required: true
     },
     group_id: {
         type: Number,
+        required: true
     },
-    data: {
+    result: {
         type: Object,
-        required: true
-    },
-    question: {
-        type: String,
-        required: true
-    },
-    answers: {
-        type: Array,
-        required: true
-    },
-    level: {
-        type: Number,
         required: true
     },
     meta_data: {
@@ -40,6 +41,6 @@ const blockSchema = new mongoose.Schema({
     }
 });
 
-blockSchema.plugin(AutoIncrement, { inc_field: 'block_id' });
+historySchema.plugin(AutoIncrement, { inc_field: 'history_id' });
 
-module.exports = mongoose.model('Block', blockSchema);
+module.exports = mongoose.model('History', historySchema);

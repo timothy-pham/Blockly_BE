@@ -1,9 +1,17 @@
 const mongoose = require('mongoose');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
-const collectionSchema = new mongoose.Schema({
+const roomSchema = new mongoose.Schema({
     name: {
         type: String,
+        required: true
+    },
+    description: {
+        type: String,
+        required: true
+    },
+    users: {
+        type: Array,
         required: true
     },
     meta_data: {
@@ -22,6 +30,6 @@ const collectionSchema = new mongoose.Schema({
     }
 });
 
-collectionSchema.plugin(AutoIncrement, { inc_field: 'collection_id' });
+roomSchema.plugin(AutoIncrement, { inc_field: 'room_id' });
 
-module.exports = mongoose.model('Collection', collectionSchema);
+module.exports = mongoose.model('Room', roomSchema);

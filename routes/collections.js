@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const Collection = require("../models/collection");
-const moment = require('moment');
+const controller = require("../controllers/collection");
+
 /**
  * @swagger
  * components:
@@ -19,15 +19,6 @@ const moment = require('moment');
  *         name:
  *           type: string
  *           description: The collection name
- *         blocks:
- *           type: array
- *           description: The blocks included in the collection
- *           items:
- *             $ref: '#/components/schemas/Block'
- *         type:
- *           type: string
- *           enum: [practice, competition, quiz]
- *           description: The type of the collection
  *         meta_data:
  *           type: object
  *           description: Additional metadata for the collection
@@ -45,8 +36,6 @@ const moment = require('moment');
  *       example:
  *         id: d5fE_asz
  *         name: Collection 1
- *         blocks: []
- *         type: practice
  *         meta_data: {}
  *         created_at: '2024-05-20T10:00:00.000Z'
  *         update_at: '2024-05-20T10:00:00.000Z'
@@ -88,15 +77,9 @@ const moment = require('moment');
  */
 
 
-router.get("/", async (req, res) => {
-    try {
-        const collections = await Collection.find();
-        res.status(200).json(collections);
-    } catch (error) {
-        console.log("BLOCKS_GET_ERROR", error)
-        res.status(500).json({ message: error });
-    }
-});
+router.get("/", controller.getAllCollections);
+
+router.get("/:id", controller.getCollectionById);
 
 
 /**
@@ -114,10 +97,6 @@ router.get("/", async (req, res) => {
  *             properties:
  *               name:
  *                 type: string
- *               blocks:
- *                 type: array
- *                 items:
- *                   $ref: '#/components/schemas/Block'
  *               type:
  *                 type: string
  *                 enum: [practice, competition, quiz]
@@ -125,9 +104,7 @@ router.get("/", async (req, res) => {
  *                 type: object
  *             example:
  *               name: Collection 1
- *               blocks: []
- *               type: practice
- *               meta_data: {}
+ *               meta_data: {"description": "This is a collection"}
  *     responses:
  *       201:
  *         description: New collection created successfully
@@ -147,24 +124,10 @@ router.get("/", async (req, res) => {
  *                   description: Error message
  */
 
-router.post("/", async (req, res) => {
-    try {
-        const { name, blocks, type, meta_data } = req.body;
-        const collection = new Collection({
-            name,
-            blocks,
-            type,
-            meta_data,
-            created_at: moment().format(),
-            update_at: moment().format(),
-            timestamp: moment().unix()
-        });
-        await collection.save();
-        res.status(201).json(collection);
-    } catch (error) {
-        console.log("BLOCKS_POST_ERROR", error)
-        res.status(500).json({ message: error });
-    }
-});
+router.post("/", controller.createCollection);
+
+router.patch("/:id", controller.updateCollection);
+
+router.delete("/:id", controller.deleteCollection);
 
 module.exports = router;

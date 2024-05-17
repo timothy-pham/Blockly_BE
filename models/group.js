@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
-const collectionSchema = new mongoose.Schema({
+const groupSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
+    },
+    collection_id: {
+        type: Number,
     },
     meta_data: {
         type: Object,
@@ -22,6 +25,6 @@ const collectionSchema = new mongoose.Schema({
     }
 });
 
-collectionSchema.plugin(AutoIncrement, { inc_field: 'collection_id' });
+groupSchema.plugin(AutoIncrement, { inc_field: 'group_id' });
 
-module.exports = mongoose.model('Collection', collectionSchema);
+module.exports = mongoose.model('Group', groupSchema);
