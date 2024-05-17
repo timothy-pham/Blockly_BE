@@ -14,6 +14,12 @@ exports.getAllGroups = async (req, res) => {
                 }
             },
             {
+                $unwind: {
+                    path: '$collection',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
                 $project: {
                     collection_id: 0
                 }
@@ -42,6 +48,12 @@ exports.getGroupById = async (req, res) => {
                     localField: 'collection_id',
                     foreignField: 'collection_id',
                     as: 'collection'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$collection',
+                    preserveNullAndEmptyArrays: true
                 }
             },
             {
