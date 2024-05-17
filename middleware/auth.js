@@ -6,7 +6,8 @@ exports.generateToken = (user) => {
     try {
         return jwt.sign({
             username: user.username,
-            user_id: user.user_id
+            user_id: user.user_id,
+            role: user.role
         }, JWT_SECRET, { expiresIn: JWT_EXPIRATION });
     } catch (error) {
         console.log("JWT_ERROR", error);
@@ -43,4 +44,13 @@ exports.authenticate = (req, res, next) => {
     }
     req.user = user;
     next();
+};
+
+exports.authorize = (roles) => {
+    return (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+        next();
+    };
 };

@@ -66,7 +66,10 @@ exports.getBlockById = async (req, res) => {
                 }
             },
             {
-                $unwind: '$group'
+                $unwind: {
+                    path: '$group',
+                    preserveNullAndEmptyArrays: true
+                }
             },
             {
                 $lookup: {
@@ -77,7 +80,10 @@ exports.getBlockById = async (req, res) => {
                 }
             },
             {
-                $unwind: '$group.collection'
+                $unwind: {
+                    path: '$group.collection',
+                    preserveNullAndEmptyArrays: true
+                }
             },
             {
                 $project: {
