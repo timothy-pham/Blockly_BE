@@ -4,6 +4,8 @@ const controller = require("../controllers/group");
 
 router.get("/", controller.getAllGroups);
 
+router.get('/search', controller.searchGroups);
+
 router.get("/:id", controller.getGroupById);
 
 router.post("/", controller.createGroup);

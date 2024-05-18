@@ -73,10 +73,11 @@ exports.getGroupById = async (req, res) => {
 };
 
 exports.createGroup = async (req, res) => {
-    const { name, meta_data } = req.body;
+    const { name, meta_data, collection_id } = req.body;
     const group = new Group({
         name,
         meta_data,
+        collection_id,
         timestamp: moment().unix()
     });
     try {
@@ -126,6 +127,49 @@ exports.deleteGroup = async (req, res) => {
         res.status(200).json({ message: "Group deleted successfully" });
     } catch (error) {
         console.log("GROUPS_DELETE_ERROR", error)
+        res.status(500).json({ message: error });
+    }
+}
+
+exports.searchGroups = async (req, res) => {
+    try {
+        const { name, collection_id, type, } = req.query;
+        const groups = await Group.aggregate([
+            {
+                $match: {
+                    $and: [
+                        name ? { name: { $regex: name, $options: 'i' } } : {},
+                        collection_id ? { collection_id: parseInt(collection_id) } : {},
+                        type ? { type: type } : {},
+                    ]
+                }
+            },
+            {
+                $lookup: {
+                    from: 'collections',
+                    localField: 'collection_id',
+                    foreignField: 'collection_id',
+                    as: 'collection'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$collection',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    collection_id: 0
+                }
+            },
+            {
+                $sort: { group_id: 1 }
+            }
+        ]);
+        res.status(200).json(groups);
+    } catch (error) {
+        console.log("GROUPS_SEARCH_ERROR", error)
         res.status(500).json({ message: error });
     }
 }
