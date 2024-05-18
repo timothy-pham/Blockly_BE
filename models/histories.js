@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
-const historySchema = new mongoose.Schema({
+const historiesSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
@@ -22,7 +22,7 @@ const historySchema = new mongoose.Schema({
         required: true
     },
     result: {
-        type: Object,
+        type: Array,
         required: true
     },
     meta_data: {
@@ -41,6 +41,6 @@ const historySchema = new mongoose.Schema({
     }
 });
 
-historySchema.plugin(AutoIncrement, { inc_field: 'history_id' });
+historiesSchema.plugin(AutoIncrement, { inc_field: 'histories_id' });
 
-module.exports = mongoose.model('History', historySchema);
+module.exports = mongoose.model('History', historiesSchema);

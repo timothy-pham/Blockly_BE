@@ -92,8 +92,10 @@ exports.getBlockById = async (req, res) => {
                 }
             },
         ]);
-        const data = block[0];
-        res.status(200).json(data);
+        if (block.length === 0) {
+            return res.status(404).json({ message: "Block not found" });
+        }
+        res.status(200).json(block[0]);
     } catch (error) {
         console.log("BLOCKS_GET_ERROR", error)
         res.status(500).json({ message: error });

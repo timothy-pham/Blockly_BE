@@ -37,9 +37,6 @@ app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }))
 app.use(bodyParser.json({ limit: '10mb' }))
 
 // Database
-// Database - Model
-require("./models/block");
-require("./models/collection");
 // Database - Connect
 const db_url = process.env.DATABASE_URL || "mongodb://localhost:27017/blockly";
 mongoose.connect(db_url, {
@@ -58,6 +55,8 @@ app.use("/groups", require("./routes/groups"));
 app.use("/blocks", require("./routes/blocks"));
 app.use("/users", require("./routes/users"));
 app.use("/auth", require("./routes/auth"));
+app.use("/histories", require("./routes/histories"));
+// app.use("/rooms", require("./routes/rooms"));
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`The server is running on http://localhost:${PORT}`));

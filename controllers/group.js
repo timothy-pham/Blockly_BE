@@ -62,8 +62,10 @@ exports.getGroupById = async (req, res) => {
                 }
             },
         ]);
-        const data = group[0];
-        res.json(data).status(200);
+        if (group.length === 0) {
+            return res.status(404).json({ message: "Group not found" });
+        }
+        res.status(200).json(group[0]);
     } catch (error) {
         console.log("GROUPS_GET_ERROR", error)
         res.status(500).json({ message: error });

@@ -16,6 +16,9 @@ exports.getCollectionById = async (req, res) => {
         const collection = await Collection.find({
             collection_id: id
         })
+        if (!collection) {
+            return res.status(404).json({ message: "Collection not found" });
+        }
         res.status(200).json(collection);
     } catch (error) {
         console.log("BLOCKS_GET_ERROR", error)
