@@ -4,6 +4,8 @@ const controller = require("../controllers/block");
 
 router.get("/", controller.getAllBlocks);
 
+router.get("/search", controller.searchBlocks);
+
 router.get("/export", controller.exportBlocks);
 
 router.get("/:id", controller.getBlockById);
@@ -45,6 +47,47 @@ module.exports = router;
  *       500:
  *         description: Internal server error
  */
+
+/**
+ * @swagger
+ * /blocks/search:
+ *   get:
+ *     summary: Search for blocks based on query parameters
+ *     tags: [Block]
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: The name of the block to search for (supports partial matches).
+ *       - in: query
+ *         name: group_id
+ *         schema:
+ *           type: number
+ *         description: The ID of the group the block belongs to.
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *         description: The type of the block to search for.
+ *       - in: query
+ *         name: level
+ *         schema:
+ *           type: number
+ *         description: The difficulty level of the block.
+ *     responses:
+ *       200:
+ *         description: A list of blocks matching the search criteria
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Block'
+ *       500:
+ *         description: Internal server error
+ */
+
 
 /**
  * @swagger

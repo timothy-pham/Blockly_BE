@@ -133,14 +133,13 @@ exports.deleteGroup = async (req, res) => {
 
 exports.searchGroups = async (req, res) => {
     try {
-        const { name, collection_id, type, } = req.query;
+        const { name, collection_id } = req.query;
         const groups = await Group.aggregate([
             {
                 $match: {
                     $and: [
                         name ? { name: { $regex: name, $options: 'i' } } : {},
                         collection_id ? { collection_id: parseInt(collection_id) } : {},
-                        type ? { type: type } : {},
                     ]
                 }
             },

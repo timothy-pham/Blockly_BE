@@ -104,9 +104,9 @@ exports.getBlockById = async (req, res) => {
 
 exports.createBlock = async (req, res) => {
     try {
-        const { name, data, question, answers, level, meta_data, type } = req.body;
+        const { group_id, name, data, question, answers, level, meta_data, type } = req.body;
         const block = new Block({
-            name, data, question, answers, level, meta_data, type,
+            name, data, question, answers, level, meta_data, type, group_id,
             created_at: moment().format('MM/DD/YYYY, hh:mm:ss'),
             updated_at: moment().format('MM/DD/YYYY, hh:mm:ss'),
             timestamp: moment().unix()
@@ -242,3 +242,38 @@ exports.checkAnswer = async (req, res) => {
         res.status(500).json({ message: error });
     }
 };
+
+exports.searchBlocks = async (req, res) => {
+    try {
+        const { name, group_id, type, level } = req.query;
+        const blocks = await Block.aggregate([
+            {
+                $match: {
+                    $and: [
+                        name ? { name: { $regex: name, $options: 'i' } } : {},
+                        group_id ? { group_id: parseInt(group_id) } : {},
+                        type ? { type: type } : {},
+                        level ? { level: parseInt(level) } : {}
+                    ]
+                }
+            },
+            {
+                $sort: { block_id: 1 }
+            },
+            {
+                $project: {
+                    created_at: 0,
+                    updated_at: 0,
+                    __v: 0,
+                    _id: 0,
+                    timestamp: 0,
+                    block_id: 0,
+                }
+            }
+        ]);
+        res.status(200).json(blocks);
+    } catch (error) {
+        console.log("BLOCKS_SEARCH_ERROR", error)
+        res.status(500).json({ message: error });
+    }
+}

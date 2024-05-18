@@ -78,6 +78,36 @@ module.exports = router;
 
 /**
  * @swagger
+ * /groups/search:
+ *   get:
+ *     summary: Search for groups based on query parameters
+ *     tags: [Group]
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: The name of the group to search for (supports partial matches).
+ *       - in: query
+ *         name: collection_id
+ *         schema:
+ *           type: number
+ *         description: The ID of the collection the group belongs to.
+ *     responses:
+ *       200:
+ *         description: A list of groups matching the search criteria
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Group'
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
  * /groups/{id}:
  *   get:
  *     summary: Retrieve a single group by ID
