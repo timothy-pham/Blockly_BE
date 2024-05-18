@@ -102,9 +102,9 @@ exports.getBlockById = async (req, res) => {
 
 exports.createBlock = async (req, res) => {
     try {
-        const { name, data, question, answers, level, meta_data } = req.body;
+        const { name, data, question, answers, level, meta_data, type } = req.body;
         const block = new Block({
-            name, data, question, answers, level, meta_data,
+            name, data, question, answers, level, meta_data, type,
             created_at: moment().format('MM/DD/YYYY, hh:mm:ss'),
             updated_at: moment().format('MM/DD/YYYY, hh:mm:ss'),
             timestamp: moment().unix()
@@ -120,16 +120,19 @@ exports.createBlock = async (req, res) => {
 exports.updateBlock = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, group_id, data, question, answer, level, meta_data } = req.body;
+        const { name, type, group_id, data, question, answer, level, meta_data } = req.body;
         const block = await Block.findOne({ block_id: id });
         if (!block) {
             return res.status(404).json({ message: "Block not found" });
         }
-        const group = await Group.findOne({ group_id: group_id });
-        if (!group) {
-            return res.status(404).json({ message: "Group not found" });
+        if (group_id) {
+            const group = await Group.findOne({ group_id: group_id });
+            if (!group) {
+                return res.status(404).json({ message: "Group not found" });
+            }
+            block.group_id = group_id;
         }
-        block.group_id = group_id;
+        if (type) block.type = type;
         if (name) block.name = name;
         if (data) block.data = data;
         if (question) block.question = question;
@@ -201,23 +204,36 @@ exports.importBlocks = async (req, res) => {
 
 exports.checkAnswer = async (req, res) => {
     try {
-        const { id, answer } = req.body;
+        const { id, answers } = req.body;
         const block = await Block.findOne({ block_id: id });
         if (!block) {
             return res.status(404).json({ message: "Block not found" });
         }
-        if (answer === block.answer) {
-            res.status(200).json({
-                correct: true,
-                id,
-                answer: answer
-            });
+
+        let correctCount = 0;
+        let isCorrect = false;
+        for (let i = 0;i < answers.length;i++) {
+            let answer = answers[i].toLowerCase().replace(/\s/g, '');
+            let correctAnswer = block.answers[i].toLowerCase().replace(/\s/g, '');
+            if (answer === correctAnswer) {
+                correctCount += 1;
+            }
+        }
+        if (block.type === 'include') {
+            if (correctCount > 0) {
+                isCorrect = true;
+            }
         } else {
-            res.status(200).json({
-                correct: false,
-                id,
-                answer: answer
-            });
+            if (correctCount === block.answers.length) {
+                isCorrect = true;
+            }
+        }
+
+        if (isCorrect) {
+            res.status(200).json({ correct: true, answers, message: "Correct Answer" });
+        } else {
+            res.status(200).json({ correct: false, answers, message: "Incorrect Answer" });
+
         }
     } catch (error) {
         console.log("BLOCKS_CHECK_ANSWER_ERROR", error)

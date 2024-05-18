@@ -12,6 +12,11 @@ const blockSchema = new mongoose.Schema({
         type: Object,
         required: true
     },
+    type: {
+        type: String,
+        enum: ['include', 'all'],
+        required: true
+    },
     question: {
         type: String,
         required: true

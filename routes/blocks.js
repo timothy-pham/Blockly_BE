@@ -105,9 +105,11 @@ module.exports = router;
  *             type: object
  *             properties:
  *               id:
- *                 type: string
- *               answer:
- *                 type: string
+ *                 type: number
+ *               answers:
+ *                 type: array
+ *                 items:
+ *                  type: string
  *     responses:
  *       200:
  *         description: Answer correctness
@@ -120,8 +122,10 @@ module.exports = router;
  *                   type: boolean
  *                 id:
  *                   type: string
- *                 answer:
- *                   type: string
+ *                 answers:
+ *                   type: array
+ *                   items:
+ *                      type: string
  *       404:
  *         description: Block not found
  *       500:
@@ -139,14 +143,14 @@ module.exports = router;
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Block'
+ *             $ref: '#/components/schemas/BlockRequest'
  *     responses:
  *       201:
  *         description: Block created successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Block'
+ *               $ref: '#/components/schemas/BlockResponse' 
  *       500:
  *         description: Internal server error
  */
@@ -242,6 +246,92 @@ module.exports = router;
  *         data:
  *           type: object
  *           description: Additional data related to the block.
+ *         type:
+ *           type: string
+ *           enum: [include, all]
+ *           description: The type of block.
+ *         question:
+ *           type: string
+ *           description: The question associated with the block.
+ *         answers:
+ *           type: array
+ *           description: Array of possible answers for the question.
+ *           items:
+ *             type: string
+ *         level:
+ *           type: number
+ *           description: The difficulty level of the block.
+ *         meta_data:
+ *           type: object
+ *           description: Additional metadata for the block.
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: The timestamp of when the block was created.
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: The timestamp of when the block was last updated.
+ *         timestamp:
+ *           type: number
+ *           description: The Unix timestamp of when the block was created.
+ */
+
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     BlockRequest:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: The name of the block.
+ *         group_id:
+ *           type: number
+ *           description: The ID of the group this block belongs to.
+ *         data:
+ *           type: object
+ *           description: Additional data related to the block.
+ *         type:
+ *           type: string
+ *           enum: [include, all]
+ *           description: The type of block.
+ *         question:
+ *           type: string
+ *           description: The question associated with the block.
+ *         answers:
+ *           type: array
+ *           description: Array of possible answers for the question.
+ *           items:
+ *             type: string
+ *         level:
+ *           type: number
+ *           description: The difficulty level of the block.
+ *         meta_data:
+ *           type: object
+ *           description: Additional metadata for the block.
+ * 
+ *     BlockResponse:
+ *       type: object
+ *       properties:
+ *         block_id:
+ *           type: number
+ *           description: The unique ID of the block.
+ *         name:
+ *           type: string
+ *           description: The name of the block.
+ *         group_id:
+ *           type: number
+ *           description: The ID of the group this block belongs to.
+ *         data:
+ *           type: object
+ *           description: Additional data related to the block.
+ *         type:
+ *           type: string
+ *           enum: [include, all]
+ *           description: The type of block.
  *         question:
  *           type: string
  *           description: The question associated with the block.
