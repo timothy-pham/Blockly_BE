@@ -122,7 +122,7 @@ exports.createBlock = async (req, res) => {
 exports.updateBlock = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, type, group_id, data, question, answer, level, meta_data } = req.body;
+        const { name, type, group_id, data, question, answers, level, meta_data } = req.body;
         const block = await Block.findOne({ block_id: id });
         if (!block) {
             return res.status(404).json({ message: "Block not found" });
@@ -138,7 +138,7 @@ exports.updateBlock = async (req, res) => {
         if (name) block.name = name;
         if (data) block.data = data;
         if (question) block.question = question;
-        if (answer) block.answer = answer;
+        if (answers) block.answers = answers;
         if (level) block.level = level;
         if (meta_data) {
             block.meta_data = {
@@ -215,8 +215,8 @@ exports.checkAnswer = async (req, res) => {
         let correctCount = 0;
         let isCorrect = false;
         for (let i = 0;i < answers.length;i++) {
-            let answer = answers[i].toLowerCase().replace(/\s/g, '');
-            let correctAnswer = block.answers[i].toLowerCase().replace(/\s/g, '');
+            let answer = answers[i]?.toLowerCase().replace(/\s/g, '');
+            let correctAnswer = block.answers[i]?.toLowerCase().replace(/\s/g, '');
             if (answer === correctAnswer) {
                 correctCount += 1;
             }
@@ -267,7 +267,6 @@ exports.searchBlocks = async (req, res) => {
                     __v: 0,
                     _id: 0,
                     timestamp: 0,
-                    block_id: 0,
                 }
             }
         ]);
