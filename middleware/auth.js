@@ -5,6 +5,7 @@ const JWT_EXPIRATION = require('../configs/auth').JWT_EXPIRATION;
 exports.generateToken = (user) => {
     try {
         return jwt.sign({
+            name: user.name,
             username: user.username,
             user_id: user.user_id,
             role: user.role
@@ -14,8 +15,7 @@ exports.generateToken = (user) => {
         return null;
     }
 };
-
-exports.verifyToken = (token) => {
+const verifyToken = (token) => {
     try {
         return jwt.verify(token, JWT_SECRET);
     } catch (error) {

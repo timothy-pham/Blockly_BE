@@ -56,7 +56,7 @@ app.use("/blocks", require("./routes/blocks"));
 app.use("/users", require("./routes/users"));
 app.use("/auth", require("./routes/auth"));
 app.use("/histories", require("./routes/histories"));
-// app.use("/rooms", require("./routes/rooms"));
+app.use("/rooms", require("./routes/room"));
 
 const PORT = process.env.PORT || 4000;
 const server = app.listen(PORT, () => console.log(`The server is running on http://localhost:${PORT}`));

@@ -24,7 +24,6 @@ const roomSchema = new mongoose.Schema({
             },
             user_data: {
                 type: Object,
-                required: true
             },
             is_ready: {
                 type: Boolean,

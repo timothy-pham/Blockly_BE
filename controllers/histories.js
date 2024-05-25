@@ -156,7 +156,8 @@ exports.getHistoryById = async (req, res) => {
 
 exports.createHistory = async (req, res) => {
     try {
-        const { user_id, room_id, type, collection_id, group_id, result, meta_data } = req.body;
+        const { user_id, room_id, type, collection_id, group_id, result, meta_data, start_time } = req.body;
+        const blocks = await Block.find({ group_id: group_id })
         const histories = new History({
             user_id,
             room_id,
@@ -164,7 +165,13 @@ exports.createHistory = async (req, res) => {
             collection_id,
             group_id,
             result,
-            meta_data,
+            meta_data: {
+                ...meta_data,
+                score: 0,
+                total: blocks.length,
+                start_time,
+                end_time: start_time
+            },
             created_at: moment().format(),
             updated_at: moment().format(),
             timestamp: moment().unix()
