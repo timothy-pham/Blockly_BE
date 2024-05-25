@@ -216,11 +216,7 @@ exports.updateHistory = async (req, res) => {
 exports.deleteHistory = async (req, res) => {
     try {
         const { id } = req.params;
-        const histories = await History.findOne({ histories_id: id });
-        if (!histories) {
-            return res.status(404).json({ message: "History not found" });
-        }
-        await histories.remove();
+        await History.findOneAndDelete({ histories_id: id });
         res.status(200).json({ message: "History deleted successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });
