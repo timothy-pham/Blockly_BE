@@ -1,6 +1,9 @@
 const History = require("../models/histories");
 const Room = require("../models/room");
 const User = require("../models/user");
+const Collection = require("../models/collection");
+const Group = require("../models/group");
+const Block = require("../models/block");
 const moment = require('moment');
 
 exports.getAllHistory = async (req, res) => {
@@ -226,40 +229,56 @@ exports.deleteHistory = async (req, res) => {
 exports.addResultToHistory = async (req, res) => {
     try {
         const { id } = req.params;
-        const { result } = req.body;
+        const { block_id, block_state, start_time, end_time, correct } = req.body;
         const histories = await History.findOne({ histories_id: id });
         if (!histories) {
             return res.status(404).json({ message: "History not found" });
         }
         const blocks = await Block.find({ group_id: histories.group_id });
-        const isExist = blocks.find(block => result.block_id === block.block_id).length > 0;
+        let isExist = blocks.some(block => block.block_id === block_id);
+
         if (!isExist) {
             return res.status(400).json({ message: "Block not found" });
         }
-
-        const isAnswerBefore = histories.result.find(history => result.block_id === history.block_id);
+        const data = {
+            block_id,
+            block_state,
+            start_time,
+            end_time,
+            correct
+        }
+        const isAnswerBefore = histories.result.find(history => block_id === history.block_id);
         if (isAnswerBefore) {
             histories.result = histories.result.map(history => {
-                if (history.block_id === result.block_id) {
+                if (history.block_id === block_id) {
                     return {
                         ...history,
-                        ...result
+                        ...data
                     }
                 }
                 return history;
             });
         } else {
-            histories.result.push(result);
+            histories.result.push({
+                ...data
+            });
         }
 
-        let total = histories.meta_data.total || blocks.length;
-        let score = histories.meta_data.score || 0;
-        if (result.correct) score++;
+
+        let total = histories.meta_data?.total || blocks.length;
+        let score = 0
+        histories.result.forEach(history => {
+            if (history.correct) {
+                score++;
+            }
+        });
+
         let new_meta_data = {
             ...histories.meta_data,
             total,
             score,
-            end_time: result.end_time
+            start_time: start_time,
+            end_time: end_time
         }
         histories.meta_data = new_meta_data;
         histories.updated_at = moment().format();
@@ -267,6 +286,7 @@ exports.addResultToHistory = async (req, res) => {
         await histories.save();
         res.status(200).json(histories);
     } catch (error) {
+        console.log("ADD_RESULT_TO_HISTORY_ERROR", error)
         res.status(500).json({ message: error.message });
     }
 }

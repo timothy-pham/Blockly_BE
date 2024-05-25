@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
+
 const roomSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -10,8 +11,30 @@ const roomSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    status: {
+        type: String,
+        required: true,
+        enum: ['waiting', 'playing', 'finished']
+    },
     users: {
-        type: Array,
+        type: [{
+            user_id: {
+                type: Number,
+                required: true
+            },
+            user_data: {
+                type: Object,
+                required: true
+            },
+            is_ready: {
+                type: Boolean,
+                default: false
+            },
+            is_host: {
+                type: Boolean,
+                default: false
+            }
+        }],
         required: true
     },
     meta_data: {
