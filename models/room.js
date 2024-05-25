@@ -9,7 +9,6 @@ const roomSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: true
     },
     status: {
         type: String,
@@ -30,6 +29,10 @@ const roomSchema = new mongoose.Schema({
                 default: false
             },
             is_host: {
+                type: Boolean,
+                default: false
+            },
+            is_connected: {
                 type: Boolean,
                 default: false
             }
