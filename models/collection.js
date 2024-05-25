@@ -6,6 +6,11 @@ const collectionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    type: {
+        type: String,
+        required: true,
+        enum: ['normal', 'solo', 'multiplayer']
+    },
     meta_data: {
         type: Object,
     },

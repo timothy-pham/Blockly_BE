@@ -59,4 +59,6 @@ app.use("/histories", require("./routes/histories"));
 // app.use("/rooms", require("./routes/rooms"));
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`The server is running on http://localhost:${PORT}`));
+const server = app.listen(PORT, () => console.log(`The server is running on http://localhost:${PORT}`));
+
+module.exports = { server };

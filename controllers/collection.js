@@ -33,6 +33,7 @@ exports.createCollection = async (req, res) => {
         const collection = new Collection({
             name,
             blocks,
+            type,
             meta_data,
             created_at: moment().format(),
             updated_at: moment().format(),
@@ -50,7 +51,7 @@ exports.createCollection = async (req, res) => {
 exports.updateCollection = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, blocks, meta_data } = req.body;
+        const { name, blocks, type, meta_data } = req.body;
 
         // Tìm tài liệu hiện tại
         const collection = await Collection.findOne({ collection_id: id });
@@ -61,7 +62,7 @@ exports.updateCollection = async (req, res) => {
         // Cập nhật các trường cơ bản
         if (name) collection.name = name;
         if (blocks) collection.blocks = blocks;
-
+        if (type) collection.type = type;
         // Cập nhật trường meta_data
         if (meta_data) {
             // Kết hợp các trường mới với các trường cũ
