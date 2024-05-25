@@ -73,9 +73,9 @@ const io = socketIO(server, {
     }
 });
 const roomController = require("./controllers/room");
+const messageController = require("./controllers/message");
 io.on('connection', (socket) => {
-    console.log('A user connected', socket.id);
-
+    // COMPETITION 
     socket.on("join_room", async (data) => {
         try {
             socket.join(data.room_id);
@@ -99,15 +99,56 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on("start_game", async () => {
+        const room_data = await roomController.startGame(socket.room_id);
+        if (room_data) {
+            io.to(socket.room_id).emit("start_game", room_data);
+        }
+    });
+
+    socket.on("ranking_update", async (data) => {
+        const room_data = await roomController.updateRanking(socket.room_id, data);
+        if (room_data) {
+            io.to(socket.room_id).emit("ranking_update", room_data);
+        }
+    });
+
+    socket.on("game_end", async (data) => {
+        const room_data = await roomController.endGame(socket.room_id, data);
+        if (room_data) {
+            io.to(socket.room_id).emit("game_end", room_data);
+            io.emit("new_winner", { user_id: room_data.winner.user_id, room_id: room_data.room_id })
+        }
+    });
+
+
+
+    // CHAT
+    socket.on("join_chat", async (data) => {
+        socket.join(data.room_id);
+        const messages = await messageController.getMessages(data.room_id);
+        socket.emit("receive_messages", messages);
+        socket.emit("new_user", { user_id: data.user_id })
+
+    });
+
+    socket.on("send_message", async (data) => {
+        const { room_id, user_id, message } = data;
+        const message_res = await memessageController.addMessage(room_id, user_id, message);
+        io.to(room_id).emit("receive_message", { user_id, message: message_res });
+    });
+
+    // NOTIFICATION
+    socket.on("send_notification", (data) => {
+        const { user_id, message } = data;
+        io.to(room_id).emit("receive_notification", { user_id, message });
+    });
+
+    // DISCONNECT
     socket.on('disconnect', () => {
         console.log('User disconnected');
         console.log(`User ID: ${socket.user_id}, Room ID: ${socket.room_id}`);
         roomController.leaveRoom(socket.room_id, socket.user_id);
         io.to(socket.room_id).emit("user_left", socket.user_id);
-    });
-
-    socket.on("blockly_data", (data) => {
-        console.log("Blockly Data", data);
-        io.to(socket.room_id).emit("blockly_data", data);
     });
 });
