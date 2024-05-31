@@ -116,8 +116,9 @@ io.on('connection', (socket) => {
     });
 
     socket.on("ranking_update", async (data) => {
-        const room_data = await roomController.updateRanking(socket.room_id, data);
+        const room_data = await roomController.updateRanking(socket.room_id, { user_id: socket.user_id, block: data });
         if (room_data) {
+            console.log("ROOM DATA", room_data)
             io.to(socket.room_id).emit("ranking_update", room_data);
         }
     });

@@ -24,6 +24,14 @@ const roomSchema = new mongoose.Schema({
             user_data: {
                 type: Object,
             },
+            blocks: {
+                type: Array,
+                default: []
+            },
+            score: {
+                type: Number,
+                default: 0
+            },
             is_ready: {
                 type: Boolean,
                 default: false

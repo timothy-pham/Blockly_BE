@@ -218,3 +218,27 @@ exports.startGame = async (room_id, user_id) => {
         return false
     }
 }
+
+exports.updateRanking = async (room_id, data) => {
+    try {
+        const { block, user_id } = data;
+        const room = await Room.findOne({ room_id });
+        if (!room) {
+            return false;
+        } else {
+            const users = room.users;
+            users.forEach(u => {
+                if (u.user_id === user_id && block.answered === true && !u.blocks.includes(block.block_id)) {
+                    u.blocks = [...u.blocks, block.block_id];
+                    u.score += 1
+                }
+            });
+            room.users = users;
+            await room.save();
+            return room;
+        }
+    } catch (error) {
+        return false
+
+    }
+}
