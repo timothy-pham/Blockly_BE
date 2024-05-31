@@ -7,6 +7,8 @@ router.get("/", controller.getAllBlocks);
 
 router.get("/search", controller.searchBlocks);
 
+router.get("/random", controller.getRandomBlocks);
+
 router.get("/export", controller.exportBlocks);
 
 router.get("/:id", controller.getBlockById);

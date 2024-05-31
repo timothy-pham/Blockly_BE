@@ -175,3 +175,23 @@ exports.userReady = async (room_id, user_id, is_ready) => {
     }
 }
 
+exports.startGame = async (room_id, user_id) => {
+    try {
+        const room = await Room.findOne({ room_id })
+        const isHost = room.users.find(u => u.user_id === user_id && u.is_host);
+        if (!isHost) {
+            return false;
+        }
+        if (!room) {
+            return false;
+        } else {
+            room.status = 'playing';
+            room.started_at = moment().format();
+            await room.save();
+            return room;
+        }
+    } catch (error) {
+        console.log("START GAME ERROR", error);
+        return false
+    }
+}

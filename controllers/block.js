@@ -1,5 +1,6 @@
 const Block = require("../models/block");
 const Group = require("../models/group");
+const Room = require("../models/room");
 const moment = require('moment');
 
 exports.getAllBlocks = async (req, res) => {
@@ -273,6 +274,39 @@ exports.searchBlocks = async (req, res) => {
         res.status(200).json(blocks);
     } catch (error) {
         console.log("BLOCKS_SEARCH_ERROR", error)
+        res.status(500).json({ message: error });
+    }
+}
+
+exports.getRandomBlocks = async (req, res) => {
+    try {
+        const { count = 5, room_id } = req.query;
+        const room = await Room.findOne({ room_id });
+        if (!room) {
+            return res.status(404).json({ message: "Room not found" });
+        }
+        const blocks = await Block.aggregate([
+            {
+                $match: {
+                    group_id: room.meta_data?.group_id
+                }
+            },
+            {
+                $sample: { size: parseInt(count) }
+            },
+            {
+                $project: {
+                    created_at: 0,
+                    updated_at: 0,
+                    __v: 0,
+                    _id: 0,
+                    timestamp: 0,
+                }
+            }
+        ]);
+        res.status(200).json(blocks);
+    } catch (error) {
+        console.log("BLOCKS_RANDOM_ERROR", error)
         res.status(500).json({ message: error });
     }
 }

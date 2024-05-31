@@ -109,7 +109,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on("start_game", async () => {
-        const room_data = await roomController.startGame(socket.room_id);
+        const room_data = await roomController.startGame(socket.room_id, socket.user_id);
         if (room_data) {
             io.to(socket.room_id).emit("start_game", room_data);
         }
