@@ -185,6 +185,29 @@ exports.startGame = async (room_id, user_id) => {
         if (!room) {
             return false;
         } else {
+            const blocks = await Block.aggregate([
+                {
+                    $match: {
+                        group_id: room.meta_data?.group_id
+                    }
+                },
+                {
+                    $sample: { size: 5 }
+                },
+                {
+                    $project: {
+                        created_at: 0,
+                        updated_at: 0,
+                        __v: 0,
+                        _id: 0,
+                        timestamp: 0,
+                    }
+                }
+            ]);
+            room.meta_data = {
+                ...room.meta_data,
+                blocks,
+            }
             room.status = 'playing';
             room.started_at = moment().format();
             await room.save();
