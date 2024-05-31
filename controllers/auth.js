@@ -2,9 +2,9 @@ const User = require('../models/user');
 const moment = require('moment');
 const bcrypt = require('bcrypt');
 const SALT_ROUNDS = require('../configs/auth').SALT_ROUNDS;
-const generateToken = require('../middleware/auth').generateToken;
+const generateToken = require('../middlewares/auth').generateToken;
 const { nanoid } = require('nanoid');
-const { decodeToken } = require('../middleware/auth');
+const { decodeToken } = require('../middlewares/auth');
 
 exports.register = async (req, res) => {
     try {

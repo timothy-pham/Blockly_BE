@@ -50,14 +50,15 @@ mongoose.connect(db_url, {
 });
 
 // Router
+const { authenticate } = require("./middlewares/auth.js");
 app.use("/", require("./routes/index"));
-app.use("/collections", require("./routes/collections"));
-app.use("/groups", require("./routes/groups"));
-app.use("/blocks", require("./routes/blocks"));
-app.use("/users", require("./routes/users"));
+app.use("/collections", authenticate, require("./routes/collections"));
+app.use("/groups", authenticate, require("./routes/groups"));
+app.use("/blocks", authenticate, require("./routes/blocks"));
+app.use("/users", authenticate, require("./routes/users"));
 app.use("/auth", require("./routes/auth"));
-app.use("/histories", require("./routes/histories"));
-app.use("/rooms", require("./routes/room"));
+app.use("/histories", authenticate, require("./routes/histories"));
+app.use("/rooms", authenticate, require("./routes/room"));
 
 const PORT = process.env.PORT || 4000;
 const server = http.createServer(app); // Create the server using the HTTP module
@@ -81,10 +82,18 @@ io.on('connection', (socket) => {
             socket.join(data.room_id);
             socket.room_id = data.room_id;
             socket.user_id = data.user_id;
+            socket.user = data.user;
             const room_data = await roomController.joinRoom(data.room_id, data.user_id);
+            // const messages = await messageController.getMessages(data.room_id);
+
             // Emit to the room that a user has joined
             if (room_data) {
                 io.to(data.room_id).emit("user_joined", room_data);
+                console.log("NEW USER", JSON.stringify(data.user))
+                io.to(data.room_id).emit("receive_messages", [
+                    { user_id: data?.user_id, message: `${data.user?.name} has joined the room` }
+                ]);
+                io.to(data.room_id).emit("new_user", { user_id: data.user_id })
             }
         } catch (error) {
             console.error("Error joining room:", error);
@@ -124,18 +133,10 @@ io.on('connection', (socket) => {
 
 
     // CHAT
-    socket.on("join_chat", async (data) => {
-        socket.join(data.room_id);
-        const messages = await messageController.getMessages(data.room_id);
-        socket.emit("receive_messages", messages);
-        socket.emit("new_user", { user_id: data.user_id })
-
-    });
-
     socket.on("send_message", async (data) => {
         const { room_id, user_id, message } = data;
-        const message_res = await memessageController.addMessage(room_id, user_id, message);
-        io.to(room_id).emit("receive_message", { user_id, message: message_res });
+        console.log("ON MESSAGE", room_id, user_id, message)
+        io.to(room_id).emit("receive_messages", { user_id, user: socket.user, message: message });
     });
 
     // NOTIFICATION

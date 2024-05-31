@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/block");
+const { authorize } = require("../middlewares/auth.js");
 
 router.get("/", controller.getAllBlocks);
 
