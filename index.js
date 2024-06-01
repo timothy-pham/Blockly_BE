@@ -110,25 +110,13 @@ io.on('connection', (socket) => {
     socket.on("ranking_update", async (data) => {
         const room_data = await roomController.updateRanking(socket.room_id, { user_id: socket.user_id, block: data }, io);
         if (room_data) {
-            console.log("ROOM DATA", room_data)
             io.to(socket.room_id).emit("ranking_update", room_data);
         }
     });
 
-    // socket.on("game_end", async (data) => {
-    //     const room_data = await roomController.endGame(socket.room_id, data);
-    //     if (room_data) {
-    //         io.to(socket.room_id).emit("game_end", room_data);
-    //         io.emit("new_winner", { user_id: room_data.winner.user_id, room_id: room_data.room_id })
-    //     }
-    // });
-
-
-
     // CHAT
     socket.on("send_message", async (data) => {
         const { room_id, user_id, message } = data;
-        console.log("ON MESSAGE", room_id, user_id, message)
         io.to(room_id).emit("receive_messages", { user_id, user: socket.user, message: message });
     });
 
