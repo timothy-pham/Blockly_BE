@@ -1,6 +1,5 @@
 const User = require("../models/user");
 const Notification = require("../models/notification");
-
 exports.getAllNotifications = async (req, res) => {
     try {
         const notifications = await Notification.aggregate([
@@ -88,3 +87,14 @@ exports.deleteNotification = async (req, res) => {
     }
 }
 
+exports.sendNotification = async (req, res) => {
+    try {
+        const io = req.io
+        const { type, message } = req.body;
+        io.emit("receive_notification", { type, message });
+        res.status(200).json({ message: "Notification sent successfully" });
+    } catch (error) {
+        console.log("SEND NOTIFICATION ERROR", error)
+        res.status(500).json({ message: error.message });
+    }
+}

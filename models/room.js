@@ -32,6 +32,12 @@ const roomSchema = new mongoose.Schema({
                 type: Number,
                 default: 0
             },
+            end_timestamp: {
+                type: Number,
+            },
+            end_time: {
+                type: String,
+            },
             is_ready: {
                 type: Boolean,
                 default: false

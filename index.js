@@ -49,17 +49,6 @@ mongoose.connect(db_url, {
     console.error('Lỗi kết nối cơ sở dữ liệu:', error);
 });
 
-// Router
-const { authenticate } = require("./middlewares/auth.js");
-app.use("/", require("./routes/index"));
-app.use("/collections", authenticate, require("./routes/collections"));
-app.use("/groups", authenticate, require("./routes/groups"));
-app.use("/blocks", authenticate, require("./routes/blocks"));
-app.use("/users", authenticate, require("./routes/users"));
-app.use("/auth", require("./routes/auth"));
-app.use("/histories", authenticate, require("./routes/histories"));
-app.use("/rooms", authenticate, require("./routes/room"));
-
 const PORT = process.env.PORT || 4000;
 const server = http.createServer(app); // Create the server using the HTTP module
 
@@ -73,6 +62,7 @@ const io = socketIO(server, {
         methods: ["GET", "POST"]
     }
 });
+
 const roomController = require("./controllers/room");
 const messageController = require("./controllers/message");
 io.on('connection', (socket) => {
@@ -111,25 +101,27 @@ io.on('connection', (socket) => {
     socket.on("start_game", async () => {
         const room_data = await roomController.startGame(socket.room_id, socket.user_id);
         if (room_data) {
+            console.log("START GAME", socket.room_id)
             io.to(socket.room_id).emit("start_game", room_data);
+            await roomController.endGame(socket.room_id, io);
         }
     });
 
     socket.on("ranking_update", async (data) => {
-        const room_data = await roomController.updateRanking(socket.room_id, { user_id: socket.user_id, block: data });
+        const room_data = await roomController.updateRanking(socket.room_id, { user_id: socket.user_id, block: data }, io);
         if (room_data) {
             console.log("ROOM DATA", room_data)
             io.to(socket.room_id).emit("ranking_update", room_data);
         }
     });
 
-    socket.on("game_end", async (data) => {
-        const room_data = await roomController.endGame(socket.room_id, data);
-        if (room_data) {
-            io.to(socket.room_id).emit("game_end", room_data);
-            io.emit("new_winner", { user_id: room_data.winner.user_id, room_id: room_data.room_id })
-        }
-    });
+    // socket.on("game_end", async (data) => {
+    //     const room_data = await roomController.endGame(socket.room_id, data);
+    //     if (room_data) {
+    //         io.to(socket.room_id).emit("game_end", room_data);
+    //         io.emit("new_winner", { user_id: room_data.winner.user_id, room_id: room_data.room_id })
+    //     }
+    // });
 
 
 
@@ -140,12 +132,6 @@ io.on('connection', (socket) => {
         io.to(room_id).emit("receive_messages", { user_id, user: socket.user, message: message });
     });
 
-    // NOTIFICATION
-    socket.on("send_notification", (data) => {
-        const { user_id, message } = data;
-        io.to(room_id).emit("receive_notification", { user_id, message });
-    });
-
     // DISCONNECT
     socket.on('disconnect', () => {
         console.log('User disconnected');
@@ -154,3 +140,21 @@ io.on('connection', (socket) => {
         io.to(socket.room_id).emit("user_left", socket.user_id);
     });
 });
+
+// Router
+const attachIO = (req, res, next) => {
+    req.io = io;
+    next();
+};
+
+app.use(attachIO);
+const { authenticate } = require("./middlewares/auth.js");
+app.use("/", require("./routes/index"));
+app.use("/collections", authenticate, require("./routes/collections"));
+app.use("/groups", authenticate, require("./routes/groups"));
+app.use("/blocks", authenticate, require("./routes/blocks"));
+app.use("/users", authenticate, require("./routes/users"));
+app.use("/auth", require("./routes/auth"));
+app.use("/histories", authenticate, require("./routes/histories"));
+app.use("/rooms", authenticate, require("./routes/room"));
+app.use("/notifications", authenticate, require("./routes/notifications"));

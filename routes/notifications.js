@@ -1,10 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/notification.js");
+const { authorize } = require("../middlewares/auth.js");
 
 router.get("/", controller.getAllNotifications);
 
 router.get("/:notification_id", controller.getNotification);
+
+router.post("/send", authorize(['admin']), controller.sendNotification);
 
 router.post("/", controller.createNotification);
 
