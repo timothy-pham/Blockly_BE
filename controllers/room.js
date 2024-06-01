@@ -269,6 +269,7 @@ exports.updateRanking = async (room_id, data, io) => {
                 }
                 io.to(room_id).emit("end_game", room);
                 winner = has_winner;
+                updatePoints(room);
                 io.emit("new_winner", { user: winner, room_id: room_id })
             }
             await room.save();
@@ -286,7 +287,8 @@ exports.endGame = async (room_id, io) => {
         if (!room) {
             return false;
         }
-        const timer = room.meta_data?.timer || 60000;
+        let timer = room.meta_data?.timer * 1000 * 60 || 60000;
+        timer = timer + 5000;
         try {
             setTimeout(async () => {
                 room = await Room.findOne({ room_id });
@@ -301,8 +303,11 @@ exports.endGame = async (room_id, io) => {
                 }
                 room = await saveWithRetry(room);
                 io.to(room_id).emit("end_game", room);
+                updatePoints(room);
                 winner = await getWinner(room);
-                io.emit("new_winner", { user: winner, room_id: room_id })
+                if (winner?.score > 0) {
+                    io.emit("new_winner", { user: winner, room_id: room_id })
+                }
             }, timer);
         } catch (error) {
             console.log("🚀 ~ exports.endGame= ~ error:", error)
@@ -383,5 +388,46 @@ exports.getUserHistories = async (req, res) => {
     } catch (error) {
         console.log("GET USER HISTORY ERROR", error);
         res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+const updatePoints = async (room) => {
+    try {
+        const users_played = room.users.filter(u => u.score > 0);
+        const user_list = users_played.sort((a, b) => {
+            if (a.score === b.score) {
+                return a.end_timestamp - b.end_timestamp
+            }
+            return b.score - a.score
+        })
+        // 1st place 100 points, 2nd place 75 points, 3rd place 50 points, > 3rd place 5 points if score > 0
+        user_list.forEach(async (user, index) => {
+            let points = 0;
+            if (index === 0) {
+                points = 100;
+            } else if (index === 1) {
+                points = 75;
+            } else if (index === 2) {
+                points = 50;
+            } else {
+                points = 5;
+            }
+            const user_data = await User.findOne({ user_id: user.user_id });
+            const new_points = user_data.meta_data?.points ? user_data.meta_data.points + points : points;
+            let points_history = user_data.meta_data?.points_history || [];
+            points_history.push({
+                room_id: room.room_id,
+                points,
+                created_at: moment().format()
+            })
+            user_data.meta_data = {
+                ...user_data.meta_data,
+                points: new_points,
+                points_history
+            }
+            await user_data.save();
+        })
+    } catch (error) {
+
     }
 }
