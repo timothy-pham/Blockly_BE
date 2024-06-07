@@ -6,9 +6,13 @@ router.get("/", controller.getAllGroups);
 
 router.get('/search', controller.searchGroups);
 
+router.get("/export", controller.exportGroups);
+
 router.get("/:id", controller.getGroupById);
 
 router.post("/", controller.createGroup);
+
+router.post("/import", controller.importGroups);
 
 router.patch("/:id", controller.updateGroup);
 

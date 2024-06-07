@@ -1,5 +1,6 @@
 const Group = require("../models/group");
 const Collection = require("../models/collection");
+const Block = require("../models/block");
 const moment = require('moment');
 
 exports.getAllGroups = async (req, res) => {
@@ -170,5 +171,71 @@ exports.searchGroups = async (req, res) => {
     } catch (error) {
         console.log("GROUPS_SEARCH_ERROR", error)
         res.status(500).json({ message: error });
+    }
+}
+
+exports.exportGroups = async (req, res) => {
+    try {
+        // Fetch all groups
+        let groups = await Group.find();
+
+        for (let i = 0;i < groups.length;i++) {
+            let blocks = await Block.find({ group_id: groups[i].group_id });
+            groups[i] = groups[i].toObject(); // Convert to plain object if it's a Mongoose document
+            groups[i].blocks = blocks;
+        }
+
+        res.status(200).json(groups);
+    } catch (error) {
+        console.error("GROUPS_GET_ERROR", error);
+        res.status(500).json({ message: error.message });
+    }
+}
+
+exports.importGroups = async (req, res) => {
+    try {
+        const groups = req.body;
+
+        for (let i = 0;i < groups.length;i++) {
+            let group = groups[i];
+            let blocks = group.blocks;
+            delete group.blocks;
+            delete group.group_id;
+            delete group.created_at;
+            delete group.updated_at;
+            delete group.timestamp;
+            delete group.__v;
+            delete group._id;
+            group = new Group({
+                ...group,
+                created_at: moment().format(),
+                updated_at: moment().format(),
+                timestamp: moment().unix()
+            });
+            await group.save();
+
+            for (let j = 0;j < blocks.length;j++) {
+                let block = blocks[j];
+                delete block.block_id;
+                delete block.created_at;
+                delete block.updated_at;
+                delete block.timestamp;
+                delete block.__v;
+                delete block._id;
+                block = new Block({
+                    ...block,
+                    group_id: group.group_id,
+                    created_at: moment().format(),
+                    updated_at: moment().format(),
+                    timestamp: moment().unix()
+                });
+                await block.save();
+            }
+        }
+
+        res.status(201).json({ message: "Groups imported successfully" });
+    } catch (error) {
+        console.error("GROUPS_IMPORT_ERROR", error);
+        res.status(500).json({ message: error.message });
     }
 }
