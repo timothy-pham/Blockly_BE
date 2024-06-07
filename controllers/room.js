@@ -267,9 +267,9 @@ exports.updateRanking = async (room_id, data, io) => {
                     ...room.meta_data,
                     winner: has_winner
                 }
+                await updatePoints(room);
                 io.to(room_id).emit("end_game", room);
                 winner = has_winner;
-                updatePoints(room);
                 io.emit("new_winner", { user: winner, room_id: room_id })
             }
             await room.save();
@@ -302,8 +302,8 @@ exports.endGame = async (room_id, io) => {
                     winner: winner
                 }
                 room = await saveWithRetry(room);
+                await updatePoints(room);
                 io.to(room_id).emit("end_game", room);
-                updatePoints(room);
                 winner = await getWinner(room);
                 if (winner?.score > 0) {
                     io.emit("new_winner", { user: winner, room_id: room_id })
@@ -396,12 +396,13 @@ const updatePoints = async (room) => {
         const users_played = room.users.filter(u => u.score > 0);
         const user_list = users_played.sort((a, b) => {
             if (a.score === b.score) {
-                return a.end_timestamp - b.end_timestamp
+                return a.end_timestamp - b.end_timestamp;
             }
-            return b.score - a.score
-        })
+            return b.score - a.score;
+        });
+
         // 1st place 100 points, 2nd place 75 points, 3rd place 50 points, > 3rd place 5 points if score > 0
-        user_list.forEach(async (user, index) => {
+        for (const [index, user] of user_list.entries()) {
             let points = 0;
             if (index === 0) {
                 points = 100;
@@ -412,22 +413,34 @@ const updatePoints = async (room) => {
             } else {
                 points = 5;
             }
+
             const user_data = await User.findOne({ user_id: user.user_id });
             const new_points = user_data.meta_data?.points ? user_data.meta_data.points + points : points;
             let points_history = user_data.meta_data?.points_history || [];
+            let matches = user_data.meta_data?.matches || 0;
+
             points_history.push({
                 room_id: room.room_id,
                 points,
                 created_at: moment().format()
-            })
+            });
+
             user_data.meta_data = {
                 ...user_data.meta_data,
                 points: new_points,
+                matches: matches + 1,
                 points_history
-            }
-            await user_data.save();
-        })
-    } catch (error) {
+            };
 
+            await user_data.save();
+            const oldUser = room.users.find(u => u.user_id === user.user_id)
+            oldUser.user_data = {
+                ...oldUser.user_data,
+                meta_data: user_data.meta_data
+            }
+        }
+        await room.save();
+    } catch (error) {
+        console.log("🚀 ~ updatePoints ~ error:", error);
     }
-}
+};

@@ -4,6 +4,8 @@ const controller = require("../controllers/histories");
 
 router.get("/", controller.getAllHistory);
 
+router.get("/ranking", controller.getRanking);
+
 router.get("/:id", controller.getHistoryById);
 
 router.patch("/add-result/:id", controller.addResultToHistory);

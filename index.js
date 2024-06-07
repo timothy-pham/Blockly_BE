@@ -39,15 +39,26 @@ app.use(bodyParser.json({ limit: '10mb' }))
 
 // Database
 // Database - Connect
+const Room = require('./models/room');
 const db_url = process.env.DATABASE_URL || "mongodb://localhost:27017/blockly";
 mongoose.connect(db_url, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => {
     console.log('Kết nối cơ sở dữ liệu thành công');
+    deleteWaitingRooms();
 }).catch((error) => {
     console.error('Lỗi kết nối cơ sở dữ liệu:', error);
 });
+
+const deleteWaitingRooms = async () => {
+    try {
+        const result = await Room.deleteMany({ status: 'waiting' });
+        console.log(`Deleted ${result.deletedCount} rooms with status 'waiting'`);
+    } catch (error) {
+        console.error('Error deleting rooms with status waiting', error);
+    }
+}
 
 const PORT = process.env.PORT || 4000;
 const server = http.createServer(app); // Create the server using the HTTP module
@@ -81,7 +92,7 @@ io.on('connection', (socket) => {
                 io.to(data.room_id).emit("user_joined", room_data);
                 console.log("NEW USER", JSON.stringify(data.user))
                 io.to(data.room_id).emit("receive_messages", [
-                    { user_id: data?.user_id, message: `${data.user?.name} has joined the room` }
+                    { user_id: data?.user_id, message: `${data.user?.name} vừa tham gia vào phòng!` }
                 ]);
                 io.to(data.room_id).emit("new_user", { user_id: data.user_id })
             }

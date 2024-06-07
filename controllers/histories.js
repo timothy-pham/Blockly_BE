@@ -297,3 +297,34 @@ exports.addResultToHistory = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+exports.getRanking = async (req, res) => {
+    try {
+        // get User have meta_data.points > 0
+        const users = await User.aggregate([
+            {
+                $match: {
+                    "meta_data.points": { $gt: 0 }
+                }
+            },
+            {
+                $project: {
+                    user_id: 1,
+                    username: 1,
+                    points: "$meta_data.points",
+                    matches: "$meta_data.matches",
+                }
+            },
+            {
+                $sort: {
+                    points: -1
+                }
+            }
+        ]);
+
+        res.status(200).json(users);
+    } catch (error) {
+        console.log("🚀 ~ exports.getRanking= ~ error:", error)
+        res.status(500).json({ message: error.message });
+    }
+}
