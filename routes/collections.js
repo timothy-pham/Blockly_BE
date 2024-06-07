@@ -5,9 +5,13 @@ const controller = require("../controllers/collection");
 
 router.get("/", controller.getAllCollections);
 
+router.get("/export", controller.exportCollection);
+
 router.get("/:id", controller.getCollectionById);
 
 router.post("/", controller.createCollection);
+
+router.post("/import", controller.importCollection);
 
 router.patch("/:id", controller.updateCollection);
 

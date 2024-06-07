@@ -1,4 +1,7 @@
 const Collection = require("../models/collection");
+const Group = require("../models/group");
+const Block = require("../models/block");
+
 const moment = require('moment');
 exports.getAllCollections = async (req, res) => {
     try {
@@ -99,3 +102,97 @@ exports.deleteCollection = async (req, res) => {
         res.status(500).json({ message: error });
     }
 };
+
+exports.exportCollection = async (req, res) => {
+    try {
+        // Fetch all collections
+        let collections = await Collection.find();
+
+        for (let i = 0;i < collections.length;i++) {
+            let groups = await Group.find({ collection_id: collections[i].collection_id });
+            for (let j = 0;j < groups.length;j++) {
+                let blocks = await Block.find({ group_id: groups[j].group_id });
+                groups[j] = groups[j].toObject(); // Convert to plain object if it's a Mongoose document
+                groups[j].blocks = blocks;
+            }
+
+            collections[i] = collections[i].toObject(); // Convert to plain object if it's a Mongoose document
+            collections[i].groups = groups;
+        }
+
+        res.status(200).json(collections);
+    } catch (error) {
+        console.error("BLOCKS_GET_ERROR", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.importCollection = async (req, res) => {
+    try {
+        const collections = req.body;
+
+        for (let i = 0;i < collections.length;i++) {
+            let collection = collections[i];
+            let groups = collection.groups;
+            delete collection.groups;
+            delete collection.collection_id;
+            delete collection.created_at;
+            delete collection.updated_at;
+            delete collection.timestamp;
+            delete collection.__v;
+            delete collection._id;
+            collection = new Collection({
+                ...collection,
+                created_at: moment().format(),
+                updated_at: moment().format(),
+                timestamp: moment().unix()
+            });
+            await collection.save();
+
+            for (let j = 0;j < groups.length;j++) {
+                let blocks = groups[j].blocks;
+                delete groups[j].blocks;
+                delete groups[j].group_id;
+                delete groups[j].created_at;
+                delete groups[j].updated_at;
+                delete groups[j].timestamp;
+                delete groups[j].__v;
+                delete groups[j]._id;
+
+                let group = new Group({
+                    ...groups[j],
+                    collection_id: collection.collection_id,
+                    created_at: moment().format(),
+                    updated_at: moment().format(),
+                    timestamp: moment().unix()
+                });
+
+                await group.save();
+
+                for (let k = 0;k < blocks.length;k++) {
+                    let block = blocks[k];
+                    delete block.block_id;
+                    delete block.created_at;
+                    delete block.updated_at;
+                    delete block.timestamp;
+                    delete block.__v;
+                    delete block._id;
+
+                    block = new Block({
+                        ...block,
+                        group_id: group.group_id,
+                        created_at: moment().format(),
+                        updated_at: moment().format(),
+                        timestamp: moment().unix()
+                    });
+                    await block.save();
+                }
+            }
+        }
+
+        res.status(201).json({ message: "Collections imported successfully" });
+    } catch (error) {
+        console.error("BLOCKS_POST_ERROR", error);
+        res.status(500).json({ message: error.message });
+    }
+}
