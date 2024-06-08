@@ -52,6 +52,12 @@ module.exports = router;
  *           description: The Unix timestamp of when the notification was created.
  */
 
+/**
+ * @swagger
+ * tags:
+ *   name: Notification
+ *   description: API endpoints for managing notifications
+ */
 
 /**
  * @swagger
@@ -194,6 +200,46 @@ module.exports = router;
  *         description: Notification deleted successfully
  *       404:
  *         description: Notification not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /notifications/send:
+ *   post:
+ *     summary: Send a notification (admin only)
+ *     tags: [Notification]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user_id:
+ *                 type: integer
+ *                 description: The ID of the user to send the notification to.
+ *               title:
+ *                 type: string
+ *                 description: The title of the notification.
+ *               message:
+ *                 type: string
+ *                 description: The content of the notification.
+ *               meta_data:
+ *                 type: object
+ *                 description: Additional metadata for the notification.
+ *     responses:
+ *       201:
+ *         description: The notification was successfully sent.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Notification'
+ *       403:
+ *         description: Forbidden
  *       500:
  *         description: Internal server error
  */

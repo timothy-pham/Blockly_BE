@@ -3,17 +3,11 @@ const router = express.Router();
 const controller = require("../controllers/histories");
 
 router.get("/", controller.getAllHistory);
-
 router.get("/ranking", controller.getRanking);
-
 router.get("/:id", controller.getHistoryById);
-
 router.patch("/add-result/:id", controller.addResultToHistory);
-
 router.post("/", controller.createHistory);
-
 router.patch("/:id", controller.updateHistory);
-
 router.delete("/:id", controller.deleteHistory);
 
 module.exports = router;
@@ -67,6 +61,13 @@ module.exports = router;
 
 /**
  * @swagger
+ * tags:
+ *   name: History
+ *   description: API endpoints for managing histories
+ */
+
+/**
+ * @swagger
  * /histories:
  *   get:
  *     summary: Get all histories
@@ -74,6 +75,25 @@ module.exports = router;
  *     responses:
  *       200:
  *         description: List of all histories
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/History'
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /histories/ranking:
+ *   get:
+ *     summary: Get history rankings
+ *     tags: [History]
+ *     responses:
+ *       200:
+ *         description: List of history rankings
  *         content:
  *           application/json:
  *             schema:

@@ -56,6 +56,12 @@ module.exports = router;
  *           description: The Unix timestamp of when the message was created.
  */
 
+/**
+ * @swagger
+ * tags:
+ *   name: Message
+ *   description: API endpoints for managing messages
+ */
 
 /**
  * @swagger

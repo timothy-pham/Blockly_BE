@@ -3,19 +3,12 @@ const router = express.Router();
 const controller = require("../controllers/group");
 
 router.get("/", controller.getAllGroups);
-
 router.get('/search', controller.searchGroups);
-
 router.get("/export", controller.exportGroups);
-
 router.get("/:id", controller.getGroupById);
-
 router.post("/", controller.createGroup);
-
 router.post("/import", controller.importGroups);
-
 router.patch("/:id", controller.updateGroup);
-
 router.delete("/:id", controller.deleteGroup);
 
 module.exports = router;
@@ -112,6 +105,23 @@ module.exports = router;
 
 /**
  * @swagger
+ * /groups/export:
+ *   get:
+ *     summary: Export groups
+ *     tags: [Group]
+ *     responses:
+ *       200:
+ *         description: Exported group data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
  * /groups/{id}:
  *   get:
  *     summary: Retrieve a single group by ID
@@ -130,6 +140,8 @@ module.exports = router;
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Group'
+ *       404:
+ *         description: Group not found
  *       500:
  *         description: Internal server error
  */
@@ -153,6 +165,29 @@ module.exports = router;
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Group'
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /groups/import:
+ *   post:
+ *     summary: Import groups
+ *     tags: [Group]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Groups imported successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
  *       500:
  *         description: Internal server error
  */

@@ -2,19 +2,12 @@ const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/collection");
 
-
 router.get("/", controller.getAllCollections);
-
 router.get("/export", controller.exportCollection);
-
 router.get("/:id", controller.getCollectionById);
-
 router.post("/", controller.createCollection);
-
 router.post("/import", controller.importCollection);
-
 router.patch("/:id", controller.updateCollection);
-
 router.delete("/:id", controller.deleteCollection);
 
 module.exports = router;
@@ -78,6 +71,23 @@ module.exports = router;
 
 /**
  * @swagger
+ * /collections/export:
+ *   get:
+ *     summary: Export a collection
+ *     tags: [Collection]
+ *     responses:
+ *       200:
+ *         description: Exported collection data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
  * /collections/{id}:
  *   get:
  *     summary: Retrieve a single collection by ID
@@ -96,6 +106,8 @@ module.exports = router;
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Collection'
+ *       404:
+ *         description: Collection not found
  *       500:
  *         description: Internal server error
  */
@@ -119,6 +131,29 @@ module.exports = router;
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Collection'
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /collections/import:
+ *   post:
+ *     summary: Import a collection
+ *     tags: [Collection]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Collection imported successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
  *       500:
  *         description: Internal server error
  */
@@ -175,30 +210,4 @@ module.exports = router;
  *         description: Collection not found
  *       500:
  *         description: Internal server error
- */
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     Collection:
- *       type: object
- *       properties:
- *         name:
- *           type: string
- *           description: The name of the collection.
- *         meta_data:
- *           type: object
- *           description: Additional metadata for the collection.
- *         created_at:
- *           type: string
- *           format: date-time
- *           description: The timestamp of when the collection was created.
- *         updated_at:
- *           type: string
- *           format: date-time
- *           description: The timestamp of when the collection was last updated.
- *         timestamp:
- *           type: number
- *           description: The Unix timestamp of when the collection was created.
  */
