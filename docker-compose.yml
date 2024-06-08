@@ -1,12 +1,25 @@
-version: '2.19.1'
+version: '3.8'
+
 services:
-  blockly:
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    network_mode: myvps
+  blockly-db:
+    image: mongodb/mongodb-community-server:6.0-ubi8
+    container_name: blockly-db
+    command: mongod --port 27018
     ports:
-      - "3101:3101"
-    expose:
-      - "3101"
-    restart: always
+      - "27018:27018"
+    volumes:
+      - mongo-data:/data/db
+
+  blockly-be:
+    build: .
+    container_name: blockly-be
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: mongodb://blockly-db:27018/blockly
+      PORT: 8000
+    depends_on:
+      - blockly-db
+
+volumes:
+  mongo-data:

@@ -40,7 +40,8 @@ app.use(bodyParser.json({ limit: '10mb' }))
 // Database
 // Database - Connect
 const Room = require('./models/room');
-const db_url = process.env.DATABASE_URL || "mongodb://localhost:27017/blockly";
+const db_url = process.env.DATABASE_URL || "mongodb://blockly-db:27018/blockly";
+console.log('Connecting to database:', db_url);
 mongoose.connect(db_url, {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -60,7 +61,7 @@ const deleteWaitingRooms = async () => {
     }
 }
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 8080;
 const server = http.createServer(app); // Create the server using the HTTP module
 
 server.listen(PORT, () => console.log(`The server is running on http://localhost:${PORT}`));
