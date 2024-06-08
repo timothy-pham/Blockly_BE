@@ -9,6 +9,8 @@ services:
       - "27018:27018"
     volumes:
       - mongo-data:/data/db
+    networks:
+      - blockly-network
 
   blockly-be:
     build: .
@@ -20,6 +22,11 @@ services:
       PORT: 8000
     depends_on:
       - blockly-db
+    networks:
+      - blockly-network
 
 volumes:
   mongo-data:
+
+networks:
+  blockly-network:
