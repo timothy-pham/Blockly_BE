@@ -1,15 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/group");
+const { authorize } = require("../middlewares/auth.js");
 
 router.get("/", controller.getAllGroups);
 router.get('/search', controller.searchGroups);
-router.get("/export", controller.exportGroups);
+router.get("/export", authorize(['admin']), controller.exportGroups);
 router.get("/:id", controller.getGroupById);
-router.post("/", controller.createGroup);
-router.post("/import", controller.importGroups);
-router.patch("/:id", controller.updateGroup);
-router.delete("/:id", controller.deleteGroup);
+router.post("/", authorize(['admin']), controller.createGroup);
+router.post("/import", authorize(['admin']), controller.importGroups);
+router.patch("/:id", authorize(['admin']), controller.updateGroup);
+router.delete("/:id", authorize(['admin']), controller.deleteGroup);
 
 module.exports = router;
 

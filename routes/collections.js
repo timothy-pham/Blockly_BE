@@ -1,14 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/collection");
+const { authorize } = require("../middlewares/auth.js");
 
 router.get("/", controller.getAllCollections);
-router.get("/export", controller.exportCollection);
+router.get("/export", authorize(['admin']), controller.exportCollection);
 router.get("/:id", controller.getCollectionById);
-router.post("/", controller.createCollection);
-router.post("/import", controller.importCollection);
-router.patch("/:id", controller.updateCollection);
-router.delete("/:id", controller.deleteCollection);
+router.post("/", authorize(['admin']), controller.createCollection);
+router.post("/import", authorize(['admin']), controller.importCollection);
+router.patch("/:id", authorize(['admin']), controller.updateCollection);
+router.delete("/:id", authorize(['admin']), controller.deleteCollection);
 
 module.exports = router;
 

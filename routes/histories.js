@@ -1,14 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/histories");
+const { authorize } = require("../middlewares/auth.js");
+
 
 router.get("/", controller.getAllHistory);
 router.get("/ranking", controller.getRanking);
 router.get("/:id", controller.getHistoryById);
 router.patch("/add-result/:id", controller.addResultToHistory);
-router.post("/", controller.createHistory);
-router.patch("/:id", controller.updateHistory);
-router.delete("/:id", controller.deleteHistory);
+router.post("/", authorize(['admin']), controller.createHistory);
+router.patch("/:id", authorize(['admin']), controller.updateHistory);
+router.delete("/:id", authorize(['admin']), controller.deleteHistory);
 
 module.exports = router;
 

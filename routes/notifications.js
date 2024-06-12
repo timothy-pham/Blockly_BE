@@ -5,15 +5,15 @@ const { authorize } = require("../middlewares/auth.js");
 
 router.get("/", controller.getAllNotifications);
 
-router.get("/:notification_id", controller.getNotification);
+router.get("/:notification_id", authorize(['admin']), controller.getNotification);
 
 router.post("/send", authorize(['admin']), controller.sendNotification);
 
-router.post("/", controller.createNotification);
+router.post("/", authorize(['admin']), controller.createNotification);
 
-router.patch("/:notification_id", controller.updateNotification);
+router.patch("/:notification_id", authorize(['admin']), controller.updateNotification);
 
-router.delete("/:notification_id", controller.deleteNotification);
+router.delete("/:notification_id", authorize(['admin']), controller.deleteNotification);
 
 module.exports = router;
 

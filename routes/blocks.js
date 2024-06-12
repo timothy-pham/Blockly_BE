@@ -9,19 +9,19 @@ router.get("/search", controller.searchBlocks);
 
 router.get("/random", controller.getRandomBlocks);
 
-router.get("/export", controller.exportBlocks);
+router.get("/export", authorize(['admin']), controller.exportBlocks);
 
 router.get("/:id", controller.getBlockById);
 
 router.post("/check-answer", controller.checkAnswer);
 
-router.post("/", controller.createBlock);
+router.post("/", authorize(['admin']), controller.createBlock);
 
-router.post("/import", controller.importBlocks);
+router.post("/import", authorize(['admin']), controller.importBlocks);
 
-router.patch("/:id", controller.updateBlock);
+router.patch("/:id", authorize(['admin']), controller.updateBlock);
 
-router.delete("/:id", controller.deleteBlock);
+router.delete("/:id", authorize(['admin']), controller.deleteBlock);
 
 module.exports = router;
 

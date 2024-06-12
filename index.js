@@ -40,7 +40,7 @@ app.use(bodyParser.json({ limit: '10mb' }))
 // Database
 // Database - Connect
 const Room = require('./models/room');
-const db_url = process.env.DATABASE_URL || "mongodb://blockly-db:27018/blockly";
+const db_url = process.env.DATABASE_URL || "mongodb://localhost:27018/blockly";
 console.log('Connecting to database:', db_url);
 mongoose.connect(db_url, {
     useNewUrlParser: true,
