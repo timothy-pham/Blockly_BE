@@ -11,6 +11,7 @@ services:
       - mongo-data:/data/db
     networks:
       - blockly-network
+    restart: always
 
   blockly-be:
     build: .
@@ -24,6 +25,7 @@ services:
       - blockly-db
     networks:
       - blockly-network
+    restart: always
 
 volumes:
   mongo-data:
