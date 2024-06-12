@@ -13,17 +13,17 @@ router.get("/students", authorize(['admin', 'teacher', 'parent']), controller.ge
 
 router.get("/:id", authorize(['admin']), controller.getUserById);
 
-router.patch("/addStudentToTeacher/:teacher_id", authorize(['admin']), controller.addStudentToTeacher);
+router.post("/addStudentToTeacher/:teacher_id", authorize(['admin']), controller.addStudentToTeacher);
 
-router.patch("/removeStudentFromTeacher/:teacher_id", authorize(['admin']), controller.removeStudentFromTeacher);
+router.post("/removeStudentFromTeacher/:teacher_id", authorize(['admin']), controller.removeStudentFromTeacher);
 
-router.patch("/addParentToTeacher/:teacher_id", authorize(['admin']), controller.addParentToTeacher);
+router.post("/addParentToTeacher/:teacher_id", authorize(['admin']), controller.addParentToTeacher);
 
-router.patch("/removeParentFromTeacher/:teacher_id", authorize(['admin']), controller.removeParentFromTeacher);
+router.post("/removeParentFromTeacher/:teacher_id", authorize(['admin']), controller.removeParentFromTeacher);
 
-router.patch("/addStudentToParent/:parent_id", authorize(['admin', 'teacher']), controller.addStudentToParent);
+router.post("/addStudentToParent/:parent_id", authorize(['admin', 'teacher']), controller.addStudentToParent);
 
-router.patch("/removeStudentFromParent/:parent_id", authorize(['admin', 'teacher']), controller.removeStudentFromParent);
+router.post("/removeStudentFromParent/:parent_id", authorize(['admin', 'teacher']), controller.removeStudentFromParent);
 
 router.patch("/:id", authorize(['admin']), controller.updateUser);
 

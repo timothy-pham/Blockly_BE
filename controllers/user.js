@@ -203,19 +203,21 @@ exports.addStudentToTeacher = async (req, res) => {
         if (student.meta_data.teacher) {
             return res.status(400).json({ message: "Student already has a teacher" });
         }
+        let students = teacher.meta_data?.students || [];
+        students = [
+            ...students,
+            student_id
+        ];
         teacher.meta_data = {
             ...teacher.meta_data,
-            students: [
-                ...teacher.meta_data.students,
-                student_id
-            ]
+            students
         }
         teacher.updated_at = moment().format();
         teacher.timestamp = moment().unix();
         await teacher.save();
         student.meta_data = {
             ...student.meta_data,
-            teacher: teacher_id
+            teacher: parseInt(teacher_id)
         }
         student.updated_at = moment().format();
         student.timestamp = moment().unix();
@@ -287,22 +289,24 @@ exports.addParentToTeacher = async (req, res) => {
         if (parent.role !== 'parent') {
             return res.status(400).json({ message: "User is not a parent" });
         }
-        if (parent.meta_data.teacher) {
+        if (parent.meta_data?.teacher) {
             return res.status(400).json({ message: "Parent already has a teacher" });
         }
+        let parents = teacher.meta_data?.parents || [];
+        parents = [
+            ...parents,
+            parent_id
+        ];
         teacher.meta_data = {
             ...teacher.meta_data,
-            parents: [
-                ...teacher.meta_data.parents,
-                parent_id
-            ]
+            parents
         }
         teacher.updated_at = moment().format();
         teacher.timestamp = moment().unix();
         await teacher.save();
         parent.meta_data = {
-            ...parent.meta_data,
-            teacher: teacher_id
+            ...parent?.meta_data,
+            teacher: parseInt(teacher_id)
         }
         parent.updated_at = moment().format();
         parent.timestamp = moment().unix();
@@ -391,19 +395,25 @@ exports.addStudentToParent = async (req, res) => {
                 return res.status(400).json({ message: "Student is not in teacher's class" });
             }
         }
+        let students = parent.meta_data.students || [];
+        if (students.includes(student_id)) {
+            return res.status(400).json({ message: "Student already added to parent" });
+        } else {
+            students = [
+                ...students,
+                student_id
+            ];
+        }
         parent.meta_data = {
             ...parent.meta_data,
-            students: [
-                ...parent.meta_data.students,
-                student_id
-            ]
+            students
         }
         parent.updated_at = moment().format();
         parent.timestamp = moment().unix();
         await parent.save();
         student.meta_data = {
             ...student.meta_data,
-            parent: parent_id
+            parent: parseInt(parent_id)
         }
         student.updated_at = moment().format();
         student.timestamp = moment().unix();
