@@ -3,7 +3,22 @@ const moment = require('moment');
 
 exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.find();
+        const users = await User.aggregate([
+            {
+                $project: {
+                    _id: 0,
+                    user_id: 1,
+                    username: 1,
+                    role: 1,
+                    name: 1,
+                    email: 1,
+                    meta_data: 1,
+                    created_at: 1,
+                    updated_at: 1,
+                    timestamp: 1
+                }
+            }
+        ]);
         res.status(200).json(users);
     } catch (error) {
         console.log("USERS_GET_ERROR", error)
@@ -14,9 +29,27 @@ exports.getAllUsers = async (req, res) => {
 exports.getUserById = async (req, res) => {
     try {
         const { id } = req.params;
-        const user = await User.find({
-            user_id: id
-        })
+        const user = await User.aggregate([
+            {
+                $match: {
+                    user_id: id
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    user_id: 1,
+                    role: 1,
+                    username: 1,
+                    name: 1,
+                    email: 1,
+                    meta_data: 1,
+                    created_at: 1,
+                    updated_at: 1,
+                    timestamp: 1
+                }
+            }
+        ])
         res.status(200).json(user);
     } catch (error) {
         console.log("USERS_GET_ERROR", error)
@@ -51,9 +84,27 @@ exports.updateUser = async (req, res) => {
 
 const getUserByRole = async (role) => {
     try {
-        const users = await User.find({
-            role: role
-        })
+        const users = await User.aggregate([
+            {
+                $match: {
+                    role: role
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    user_id: 1,
+                    username: 1,
+                    role: 1,
+                    name: 1,
+                    email: 1,
+                    meta_data: 1,
+                    created_at: 1,
+                    updated_at: 1,
+                    timestamp: 1
+                }
+            }
+        ])
         return users;
     } catch (error) {
         console.log("USERS_GET_ERROR", error)
@@ -169,7 +220,7 @@ exports.addStudentToTeacher = async (req, res) => {
         student.updated_at = moment().format();
         student.timestamp = moment().unix();
         await student.save();
-        res.status(200).json({ teacher, student });
+        res.status(200).json({ teacher: teacher.meta_data, student: student.meta_data });
     } catch (error) {
         console.log("USERS_PATCH_ERROR", error)
         res.status(500).json({ message: error });
@@ -211,7 +262,7 @@ exports.removeStudentFromTeacher = async (req, res) => {
         student.updated_at = moment().format();
         student.timestamp = moment().unix();
         await student.save();
-        res.status(200).json({ teacher, student });
+        res.status(200).json({ teacher: teacher.meta_data, student: student.meta_data });
     } catch (error) {
         console.log("USERS_PATCH_ERROR", error)
         res.status(500).json({ message: error });
@@ -256,7 +307,7 @@ exports.addParentToTeacher = async (req, res) => {
         parent.updated_at = moment().format();
         parent.timestamp = moment().unix();
         await parent.save();
-        res.status(200).json({ teacher, parent });
+        res.status(200).json({ teacher: teacher.meta_data, parent: parent.meta_data });
     } catch (error) {
         console.log("USERS_PATCH_ERROR", error)
         res.status(500).json({ message: error });
@@ -298,7 +349,7 @@ exports.removeParentFromTeacher = async (req, res) => {
         parent.updated_at = moment().format();
         parent.timestamp = moment().unix();
         await parent.save();
-        res.status(200).json({ teacher, parent });
+        res.status(200).json({ teacher: teacher.meta_data, parent: parent.meta_data });
     } catch (error) {
         console.log("USERS_PATCH_ERROR", error)
         res.status(500).json({ message: error });
@@ -357,7 +408,7 @@ exports.addStudentToParent = async (req, res) => {
         student.updated_at = moment().format();
         student.timestamp = moment().unix();
         await student.save();
-        res.status(200).json({ parent, student });
+        res.status(200).json({ parent: parent.meta_data, student: student.meta_data });
     } catch (error) {
         console.log("USERS_PATCH_ERROR", error)
         res.status(500).json({ message: error });
@@ -399,7 +450,7 @@ exports.removeStudentFromParent = async (req, res) => {
         student.updated_at = moment().format();
         student.timestamp = moment().unix();
         await student.save();
-        res.status(200).json({ parent, student });
+        res.status(200).json({ parent: parent.meta_data, student: student.meta_data });
     } catch (error) {
         console.log("USERS_PATCH_ERROR", error)
         res.status(500).json({ message: error });
