@@ -8,7 +8,13 @@ const moment = require('moment');
 
 exports.getAllHistory = async (req, res) => {
     try {
+        const userRequest = req.user;
         const histories = await History.aggregate([
+            {
+                $match: {
+                    user_id: userRequest.user_id
+                }
+            },
             {
                 $lookup: {
                     from: "rooms",
@@ -76,6 +82,11 @@ exports.getAllHistory = async (req, res) => {
                         password: 0
                     }
                 }
+            },
+            {
+                $sort: {
+                    updated_at: -1
+                }
             }
         ]);
 
@@ -84,6 +95,80 @@ exports.getAllHistory = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+exports.getHistoryStudent = async (req, res) => {
+    try {
+        const userRequestData = User.findOne({ user_id: req.user.user_id });
+        const listStudents = userRequestData.meta_data.students;
+        const histories = await History.aggregate([
+            {
+                $match: {
+                    user_id: { $in: listStudents }
+                }
+            },
+            {
+                $lookup: {
+                    from: "rooms",
+                    localField: "room_id",
+                    foreignField: "room_id",
+                    as: "room"
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "user_id",
+                    foreignField: "user_id",
+                    as: "user"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$room",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $unwind: {
+                    path: "$user",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    histories_id: 1,
+                    type: 1,
+                    user_id: 0,
+                    room_id: 0,
+                    collection_id: 1,
+                    group_id: 1,
+                    result: 1,
+                    meta_data: 1,
+                    created_at: 1,
+                    updated_at: 1,
+                    timestamp: 1,
+                    room: {
+                        room_id: 1,
+                        name: 1
+                    },
+                    user: {
+                        user_id: 1,
+                        username: 1
+                    }
+                }
+            },
+            {
+                $sort: {
+                    updated_at: -1
+                }
+            }
+        ])
+        res.status(200).json(histories);
+    } catch (error) {
+        console.log("GET ROOM HISTORY ERROR", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
 
 exports.getHistoryById = async (req, res) => {
     try {
@@ -156,8 +241,9 @@ exports.getHistoryById = async (req, res) => {
 
 exports.createHistory = async (req, res) => {
     try {
-        const { user_id, room_id, type, collection_id, group_id, result, meta_data, start_time } = req.body;
+        const { room_id, type, collection_id, group_id, result, meta_data, start_time } = req.body;
         const blocks = await Block.find({ group_id: group_id })
+        const user_id = req.user.user_id;
         const histories = new History({
             user_id,
             room_id,
@@ -311,6 +397,7 @@ exports.getRanking = async (req, res) => {
                 $project: {
                     user_id: 1,
                     username: 1,
+                    name: 1,
                     points: "$meta_data.points",
                     matches: "$meta_data.matches",
                 }
@@ -326,5 +413,38 @@ exports.getRanking = async (req, res) => {
     } catch (error) {
         console.log("🚀 ~ exports.getRanking= ~ error:", error)
         res.status(500).json({ message: error.message });
+    }
+}
+
+exports.getStatisticStudent = async (req, res) => {
+    try {
+        // get user finish how many group by each collection
+        const userRequestData = User.findOne({ user_id: req.user.user_id });
+        const listStudents = userRequestData.meta_data.students;
+        const collections = await Collection.find({});
+        let data = [];
+        for (let i = 0;i < collections.length;i++) {
+            const collection = collections[i];
+            const groups = await Group.find({ collection_id: collection.collection_id });
+            let totalGroup = groups.length;
+            let totalGroupFinish = 0;
+            for (let j = 0;j < groups.length;j++) {
+                const group = groups[j];
+                const histories = await History.findOne({ user_id: { $in: listStudents }, group_id: group.group_id });
+                if (histories) {
+                    totalGroupFinish++;
+                }
+            }
+            data.push({
+                collection_id: collection.collection_id,
+                collection_name: collection.name,
+                total_group: totalGroup,
+                total_group_finish: totalGroupFinish
+            });
+        }
+        res.status(200).json(data);
+    } catch (error) {
+        console.log("GET STATISTIC STUDENT ERROR", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 }

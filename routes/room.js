@@ -7,6 +7,8 @@ router.get("/", controller.getAllRooms);
 
 router.get("/histories", controller.getRoomHistories);
 
+router.get("/histories/students", controller.getRoomHistoriesStudents);
+
 router.get("/histories/:user_id", controller.getUserHistories);
 
 router.get("/:room_id", controller.getRoom);

@@ -5,10 +5,11 @@ const { authorize } = require("../middlewares/auth.js");
 
 
 router.get("/", controller.getAllHistory);
+router.get("/statistics/students", controller.getStatisticStudent);
 router.get("/ranking", controller.getRanking);
 router.get("/:id", controller.getHistoryById);
 router.patch("/add-result/:id", controller.addResultToHistory);
-router.post("/", authorize(['admin']), controller.createHistory);
+router.post("/", controller.createHistory);
 router.patch("/:id", authorize(['admin']), controller.updateHistory);
 router.delete("/:id", authorize(['admin']), controller.deleteHistory);
 

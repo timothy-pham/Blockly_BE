@@ -184,9 +184,11 @@ exports.startGame = async (room_id, user_id) => {
         const room = await Room.findOne({ room_id })
         const isHost = room.users.find(u => u.user_id === user_id && u.is_host);
         if (!isHost) {
+            console.log("NOT HOST")
             return false;
         }
         if (!room) {
+            console.log("NO ROOM")
             return false;
         } else {
             // all user is connecting must be ready
@@ -198,10 +200,12 @@ exports.startGame = async (room_id, user_id) => {
                 }
             });
             if (!isAllReady) {
+                console.log("NOT READY")
                 return false;
             }
             const group = await Group.findOne({ group_id: room.meta_data?.group_id });
             if (!group) {
+                console.log("NO GROUP")
                 return false;
             }
             const blocks = await Block.aggregate([
@@ -361,6 +365,32 @@ exports.getRoomHistories = async (req, res) => {
                     status: 'finished',
                     'meta_data.winner': { $exists: true }
                 }
+            },
+            {
+                $sort: { 'meta_data.started_timestamp': -1 }
+            }
+        ]);
+        res.status(200).json(rooms);
+    } catch (error) {
+        console.log("GET ROOM HISTORY ERROR", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+exports.getRoomHistoriesStudents = async (req, res) => {
+    try {
+        const userRequestData = User.findOne({ user_id: req.user.user_id });
+        const listStudents = userRequestData.meta_data.students;
+        const rooms = await Room.aggregate([
+            {
+                $match: {
+                    status: 'finished',
+                    'meta_data.winner': { $exists: true },
+                    'users.user_id': { $in: listStudents }
+                }
+            },
+            {
+                $sort: { 'meta_data.started_timestamp': -1 }
             }
         ]);
         res.status(200).json(rooms);
@@ -382,6 +412,9 @@ exports.getUserHistories = async (req, res) => {
                     'meta_data.winner': { $exists: true },
                     'users.user_id': parseInt(user_id)
                 }
+            },
+            {
+                $sort: { 'meta_data.started_timestamp': -1 }
             }
         ]);
         res.status(200).json(rooms);
