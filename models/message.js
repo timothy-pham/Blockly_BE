@@ -6,9 +6,20 @@ const messageSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    room_id: {
-        type: Number,
-        required: true
+    type: {
+        type: String,
+        required: true,
+        enum: ['group', 'private'],
+    },
+    users: {
+        type: Array,
+        required: true,
+        validate: {
+            validator: function (v) {
+                return Array.isArray(v) && v.length >= 2;
+            },
+            message: 'There must be at least 2 users.'
+        }
     },
     messages: {
         type: [{
@@ -28,7 +39,6 @@ const messageSchema = new mongoose.Schema({
                 type: Number,
                 required: true
             }
-
         }],
         required: true
     },

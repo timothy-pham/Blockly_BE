@@ -131,7 +131,9 @@ io.on('connection', (socket) => {
         const { room_id, user_id, message } = data;
         io.to(room_id).emit("receive_messages", { user_id, user: socket.user, message: message });
     });
-
+    socket.on("send_message_to_all", async (data) => {
+        io.emit("receive_messages_to_all", { user_id: socket.user_id, user: socket.user, message: data.message });
+    });
     // DISCONNECT
     socket.on('disconnect', () => {
         console.log('User disconnected');
