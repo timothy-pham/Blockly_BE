@@ -23,7 +23,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: mongodb://root:timothydatonsthanhson@blockly-db:27018/blockly
+      DATABASE_URL: mongodb://root:timothydatonsthanhson@blockly-db:27018/blockly?authSource=admin
       PORT: 8000
     depends_on:
       - blockly-db
