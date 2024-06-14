@@ -2,6 +2,10 @@ const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/message.js");
 
+router.get("/", controller.getMessages);
+
+router.post("/send/:id", controller.sendMessage);
+
 router.post("/", controller.createMessage);
 
 module.exports = router;

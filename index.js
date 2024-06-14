@@ -18,8 +18,18 @@ const options = {
             title: "BLockly API",
             version: "1.0.0",
             description: "BLockly API - 👋🌎🌍🌏",
+            contact: {
+                name: "DATONS Team",
+                email: "phamtiendat.dev@gmail.com",
+            }
         },
+
+
         servers: [
+            {
+                "url": "https://api.timothypham.io.vn",
+                "description": "Production server"
+            }
         ],
     },
     apis: ["./routes/*.js"],
@@ -28,7 +38,9 @@ const specs = swaggerJsDoc(options);
 
 // General
 const app = express();
-app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs));
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs, {
+    customSiteTitle: 'Blockly API Docs - DATONS',
+}));
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
@@ -160,3 +172,4 @@ app.use("/auth", require("./routes/auth"));
 app.use("/histories", authenticate, require("./routes/histories"));
 app.use("/rooms", authenticate, require("./routes/room"));
 app.use("/notifications", authenticate, require("./routes/notifications"));
+app.use("/messages", authenticate, require("./routes/message"));

@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/auth");
-
+const { authenticate } = require("../middlewares/auth");
 router.post("/login", controller.login);
+
+router.post("/reset-password", authenticate, controller.resetPassword);
 
 router.post("/register", controller.register);
 
@@ -148,3 +150,43 @@ module.exports = router;
  *       500:
  *         description: Server error
  */
+
+/**
+    * @swagger
+    * /auth/reset-password:
+    *   post:
+    *     summary: Reset user password
+    *     tags: [Auth]
+    *     requestBody:
+    *       required: true
+    *       content:
+    *         application/json:
+    *           schema:
+    *             type: object
+    *             properties:
+    *               old_password:
+    *                 type: string
+    *                 example: password123
+    *               new_password:
+    *                 type: string
+    *                 example: newpassword123
+    *     parameters:
+    *       - in: header
+    *         name: Authorization
+    *         required: true
+    *         schema:
+    *           type: string
+    *           example: Bearer your.jwt.token
+    *         description: Current JWT token.
+    *     responses:
+    *       200:
+    *         description: Password updated successfully
+    *       400:
+    *         description: Old and new password are required
+    *       401:
+    *         description: Unauthorized or invalid password
+    *       404:
+    *         description: User not found
+    *       500:
+    *         description: Server error
+    */

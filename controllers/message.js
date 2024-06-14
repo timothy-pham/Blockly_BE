@@ -4,9 +4,12 @@ const moment = require('moment');
 
 exports.createMessage = async (req, res) => {
     try {
-        const { type, name, meta_data, users } = req.body;
-        const usersList = users.push(req.user.user_id);
-        if (type === 'private' && users.length !== 2) {
+        const { type, meta_data, users } = req.body;
+        let usersList = [
+            ...users,
+            req.user.user_id
+        ]
+        if (type === 'private' && usersList.length !== 2) {
             return res.status(400).json({ message: "Private messages must have 2 users" });
         }
         if (type === 'private') {
@@ -18,10 +21,9 @@ exports.createMessage = async (req, res) => {
         }
         const message_data = new Message({
             type,
-            name,
             users: usersList,
             messages: [{
-                user_id,
+                user_id: req.user.user_id,
                 message: "Welcome to the chat",
                 send_at: moment().format(),
                 timestamp: moment().unix()
@@ -46,7 +48,7 @@ exports.getMessages = async (req, res) => {
         const messages = await Message.aggregate([
             {
                 $match: {
-                    users: user_id
+                    users: { $in: [user_id] }
                 }
             },
             {
@@ -54,34 +56,38 @@ exports.getMessages = async (req, res) => {
                     from: "users",
                     localField: "users",
                     foreignField: "user_id",
-                    as: "users"
-                }
-            },
-            {
-                $unwind: {
-                    path: "$users",
-                    preserveNullAndEmptyArrays: true
+                    as: "user_details"
                 }
             },
             {
                 $project: {
                     _id: 0,
+                    message_id: 1,
                     name: 1,
                     type: 1,
-                    users: 1,
                     messages: 1,
                     meta_data: 1,
                     created_at: 1,
                     updated_at: 1,
                     timestamp: 1,
                     users: {
-                        user_id: 1,
-                        name: 1,
-                        last_name: 1,
-                        role: 1,
-                        email: 1,
-                        meta_data: 1,
-                    }
+                        $map: {
+                            input: "$users",
+                            as: "user_id",
+                            in: {
+                                $let: {
+                                    vars: { user: { $arrayElemAt: ["$user_details", { $indexOfArray: ["$user_details.user_id", "$$user_id"] }] } },
+                                    in: {
+                                        name: "$$user.name",
+                                        meta_data: "$$user.meta_data",
+                                        user_id: "$$user.user_id",
+                                    }
+                                }
+                            }
+                        }
+                    },
+
+
                 }
             },
             {
@@ -89,10 +95,11 @@ exports.getMessages = async (req, res) => {
                     timestamp: -1
                 }
             }
-        ])
-        return messages.messages;
+        ]);
+        return res.status(200).json(messages);
     } catch (error) {
-        return []
+        console.log("GET MESSAGES ERROR", error)
+        return res.status(500).json({ message: "Internal server error" });
     }
 }
 
@@ -132,14 +139,7 @@ exports.getMessageById = async (req, res) => {
                     created_at: 1,
                     updated_at: 1,
                     timestamp: 1,
-                    users: {
-                        user_id: 1,
-                        name: 1,
-                        last_name: 1,
-                        role: 1,
-                        email: 1,
-                        meta_data: 1,
-                    }
+
                 }
             },
         ]);
@@ -156,7 +156,7 @@ exports.getMessageById = async (req, res) => {
 exports.sendMessage = async (req, res) => {
     try {
         const { id } = req.params;
-        const { message } = req.body;
+        const { message } = req.body.body
         const user_id = req.user.user_id;
         const message_data = await Message.findOne({ message_id: parseInt(id) });
         if (!message_data) {

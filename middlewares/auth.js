@@ -8,7 +8,8 @@ exports.generateToken = (user) => {
             name: user.name,
             username: user.username,
             user_id: user.user_id,
-            role: user.role
+            role: user.role,
+            meta_data: user.meta_data
         }, JWT_SECRET, { expiresIn: JWT_EXPIRATION });
     } catch (error) {
         console.log("JWT_ERROR", error);

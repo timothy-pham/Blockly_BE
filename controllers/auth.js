@@ -57,7 +57,7 @@ exports.login = async (req, res) => {
             await user.save();
         }
 
-        res.status(200).json({ token, refresh_token, user: { name: user.name, username: user.username, user_id: user.user_id, role: user.role } });
+        res.status(200).json({ token, refresh_token, user: { name: user.name, username: user.username, user_id: user.user_id, role: user.role, meta_data: user.meta_data } });
     } catch (error) {
         console.log("USERS_LOGIN_ERROR", error)
         res.status(500).json({ message: error });
@@ -94,3 +94,24 @@ exports.refreshToken = async (req, res) => {
         res.status(500).json({ message: error });
     }
 };
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const userRequestRole = req.user.role;
+        const { username, password } = req.body;
+        const user = await User.findOne({ username });
+        if (userRequestRole != 'admin' && user.user_id != req.user.user_id) {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+        user.password = hashedPassword;
+        await user.save();
+        res.status(200).json({ message: "Password updated" });
+    } catch (error) {
+        console.log("USERS_RESET_PASSWORD_ERROR", error)
+        res.status(500).json({ message: error });
+    }
+}

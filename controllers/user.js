@@ -3,23 +3,57 @@ const moment = require('moment');
 
 exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.aggregate([
-            {
-                $project: {
-                    _id: 0,
-                    user_id: 1,
-                    username: 1,
-                    role: 1,
-                    name: 1,
-                    email: 1,
-                    meta_data: 1,
-                    created_at: 1,
-                    updated_at: 1,
-                    timestamp: 1
+        const userRequestRole = req.user.role;
+        // if admin get all users, if teacher get users in class
+        if (userRequestRole === 'teacher') {
+            const teacher = await User.findOne({ user_id: req.user.user_id });
+            const teacherStudents = teacher.meta_data.students;
+            const teacherParents = teacher.meta_data.parents;
+            const listUsers = [
+                ...teacherStudents,
+                ...teacherParents
+            ];
+            const users = await User.aggregate([
+                {
+                    $match: {
+                        user_id: { $in: listUsers }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        user_id: 1,
+                        username: 1,
+                        role: 1,
+                        name: 1,
+                        email: 1,
+                        meta_data: 1,
+                        created_at: 1,
+                        updated_at: 1,
+                        timestamp: 1
+                    }
                 }
-            }
-        ]);
-        res.status(200).json(users);
+            ]);
+            res.status(200).json(users);
+        } else {
+            const users = await User.aggregate([
+                {
+                    $project: {
+                        _id: 0,
+                        user_id: 1,
+                        username: 1,
+                        role: 1,
+                        name: 1,
+                        email: 1,
+                        meta_data: 1,
+                        created_at: 1,
+                        updated_at: 1,
+                        timestamp: 1
+                    }
+                }
+            ]);
+            res.status(200).json(users);
+        }
     } catch (error) {
         console.log("USERS_GET_ERROR", error)
         res.status(500).json({ message: error });
@@ -32,7 +66,7 @@ exports.getUserById = async (req, res) => {
         const user = await User.aggregate([
             {
                 $match: {
-                    user_id: id
+                    user_id: parseInt(id)
                 }
             },
             {
@@ -50,7 +84,7 @@ exports.getUserById = async (req, res) => {
                 }
             }
         ])
-        res.status(200).json(user);
+        res.status(200).json(user[0]);
     } catch (error) {
         console.log("USERS_GET_ERROR", error)
         res.status(500).json({ message: error });

@@ -3,7 +3,7 @@ const router = express.Router();
 const controller = require("../controllers/user");
 const { authorize } = require("../middlewares/auth.js");
 
-router.get("/", authorize(['admin']), controller.getAllUsers);
+router.get("/", authorize(['admin', 'teacher']), controller.getAllUsers);
 
 router.get("/teachers", authorize(['admin']), controller.getAllTeachers);
 
@@ -11,7 +11,7 @@ router.get("/parents", authorize(['admin', 'teacher']), controller.getAllParents
 
 router.get("/students", authorize(['admin', 'teacher', 'parent']), controller.getAllStudents);
 
-router.get("/:id", authorize(['admin']), controller.getUserById);
+router.get("/:id", controller.getUserById);
 
 router.post("/addStudentToTeacher/:teacher_id", authorize(['admin']), controller.addStudentToTeacher);
 
