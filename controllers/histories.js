@@ -448,3 +448,36 @@ exports.getStatisticStudent = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 }
+
+exports.getStatistic = async (req, res) => {
+    try {
+        const collections = await Collection.find({});
+        let data = [];
+        for (let i = 0;i < collections.length;i++) {
+            const collection = collections[i];
+            const groups = await Group.find({ collection_id: collection.collection_id });
+            let totalGroup = groups.length;
+            let totalGroupFinish = 0;
+            let listGroup = []
+            for (let j = 0;j < groups.length;j++) {
+                const group = groups[j];
+                const histories = await History.findOne({ user_id: req.user.user_id, group_id: group.group_id });
+                if (histories) {
+                    totalGroupFinish++;
+                    listGroup.push(group)
+                }
+            }
+            data.push({
+                collection_id: collection.collection_id,
+                collection_name: collection.name,
+                total_group: totalGroup,
+                total_group_finish: totalGroupFinish,
+                listGroup
+            });
+        }
+        res.status(200).json(data);
+    } catch (error) {
+        console.log("GET STATISTIC STUDENT ERROR", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}

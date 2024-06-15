@@ -5,6 +5,7 @@ const { authorize } = require("../middlewares/auth.js");
 
 
 router.get("/", controller.getAllHistory);
+router.get("/statistics", controller.getStatistic);
 router.get("/statistics/students", controller.getStatisticStudent);
 router.get("/ranking", controller.getRanking);
 router.get("/:id", controller.getHistoryById);

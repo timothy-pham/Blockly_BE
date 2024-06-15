@@ -16,7 +16,7 @@ exports.createMessage = async (req, res) => {
             // check if message already exists
             const message = await Message.findOne({ type, users: { $all: usersList } });
             if (message) {
-                return res.status(400).json({ message: "Private message already exists" });
+                return res.status(200).json(message);
             }
         }
         const message_data = new Message({
@@ -24,7 +24,7 @@ exports.createMessage = async (req, res) => {
             users: usersList,
             messages: [{
                 user_id: req.user.user_id,
-                message: "Welcome to the chat",
+                message: "Xin chào! Rất vui được gặp bạn!",
                 send_at: moment().format(),
                 timestamp: moment().unix()
             }],
