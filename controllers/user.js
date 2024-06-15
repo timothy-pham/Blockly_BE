@@ -152,12 +152,48 @@ const getUserByRole = async (role) => {
     }
 }
 
+exports.getClassMembers = async (req, res) => {
+    try {
+        const teacher_id = req.params.teacher_id
+        const teacher = await User.findOne({ user_id: teacher_id })
+        const memberIds = teacher?.meta_data
+            ? [...teacher.meta_data.students, ...teacher.meta_data.parents]
+            : [];
+        const members = await User.aggregate([
+            {
+                $match: {
+                    user_id: { $in: memberIds }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    user_id: 1,
+                    username: 1,
+                    role: 1,
+                    name: 1,
+                    email: 1,
+                    meta_data: 1,
+                    created_at: 1,
+                    updated_at: 1,
+                    timestamp: 1
+                }
+            }
+        ]);
+        res.status(200).json(members)
+    } catch (error) {
+        console.log("GET_CLASS_ERROR", error)
+        res.status(500).json({ message: error });
+    }
+}
+
 exports.getAllTeachers = async (req, res) => {
     try {
         const teachers = await getUserByRole('teacher');
         res.status(200).json(teachers);
     } catch (error) {
-
+        console.log("TEACHER_GET_ERROR", error)
+        res.status(500).json({ message: error });
     }
 }
 

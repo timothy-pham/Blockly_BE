@@ -5,6 +5,8 @@ const { authorize } = require("../middlewares/auth.js");
 
 router.get("/", authorize(['admin', 'teacher']), controller.getAllUsers);
 
+router.get("/class/:teacher_id", controller.getClassMembers);
+
 router.get("/teachers", authorize(['admin']), controller.getAllTeachers);
 
 router.get("/parents", authorize(['admin', 'teacher']), controller.getAllParents);
