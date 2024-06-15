@@ -173,6 +173,8 @@ exports.sendMessage = async (req, res) => {
         }
         message_data.messages.push(new_message);
         await message_data.save();
+        const io = req.io;
+        io.to(`message_${id}`).emit("new_message", { message_id: id, data: message_data });
         return res.status(200).json(message_data);
     } catch (error) {
         console.log("SEND MESSAGE ERROR", error);

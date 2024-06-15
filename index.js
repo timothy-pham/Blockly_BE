@@ -144,8 +144,20 @@ io.on('connection', (socket) => {
         io.to(room_id).emit("receive_messages", { user_id, user: socket.user, message: message });
     });
     socket.on("send_message_to_all", async (data) => {
-        io.emit("receive_messages_to_all", { user_id: socket.user_id, user: socket.user, message: data.message });
+        try {
+            console.log("SEND MESSAGE TO ALL", data)
+            io.emit("receive_messages_to_all", { user_id: data.user_id, user: data.user, message: data.message, time: data.time });
+        } catch (error) {
+            console.error("Error sending message to all:", error);
+        }
     });
+    socket.on("join_chat", async (data) => {
+        socket.join(`message_${data.message_id}`);
+        socket.message_id = data.message_id;
+        socket.user_id = data.user_id;
+        socket.user = data.user;
+    });
+
     // DISCONNECT
     socket.on('disconnect', () => {
         console.log('User disconnected');

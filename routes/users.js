@@ -25,6 +25,6 @@ router.post("/addStudentToParent/:parent_id", authorize(['admin', 'teacher']), c
 
 router.post("/removeStudentFromParent/:parent_id", authorize(['admin', 'teacher']), controller.removeStudentFromParent);
 
-router.patch("/:id", authorize(['admin']), controller.updateUser);
+router.patch("/:id", controller.updateUser);
 
 module.exports = router;

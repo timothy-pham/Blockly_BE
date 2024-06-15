@@ -99,7 +99,13 @@ exports.updateUser = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        if (role) user.role = role;
+        if (req.user.role === 'teacher' || req.user.role === 'admin') {
+            if (role === 'admin' && req.user.role !== 'admin') {
+                return res.status(400).json({ message: "You are not authorized to update role to admin" });
+            }
+            if (role) user.role = role;
+
+        }
         if (name) user.name = name;
         if (email) user.email = email;
         if (meta_data) user.meta_data = {
