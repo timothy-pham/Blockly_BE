@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema({
     },
     meta_data: {
         type: Object,
+        default: {}
     },
     created_at: {
         type: Date,

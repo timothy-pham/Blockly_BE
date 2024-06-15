@@ -19,6 +19,10 @@ exports.register = async (req, res) => {
             name,
             username,
             password: hashedPassword,
+            meta_data: {
+                points: 0,
+                matches: 0
+            },
             created_at: moment().format('MM/DD/YYYY, hh:mm:ss'),
             updated_at: moment().format('MM/DD/YYYY, hh:mm:ss'),
             timestamp: moment().unix()
