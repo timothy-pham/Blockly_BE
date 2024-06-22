@@ -400,6 +400,7 @@ exports.getRanking = async (req, res) => {
                     name: 1,
                     points: "$meta_data.points",
                     matches: "$meta_data.matches",
+                    meta_data: 1
                 }
             },
             {
