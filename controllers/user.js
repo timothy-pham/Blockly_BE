@@ -157,7 +157,7 @@ exports.getClassMembers = async (req, res) => {
         const teacher_id = req.params.teacher_id
         const teacher = await User.findOne({ user_id: teacher_id })
         let memberIds = teacher?.meta_data
-            ? [...teacher.meta_data.students, ...teacher.meta_data.parents]
+            ? [...teacher?.meta_data?.students, ...teacher?.meta_data?.parents]
             : [];
         memberIds.push(parseInt(teacher_id))
         const members = await User.aggregate([

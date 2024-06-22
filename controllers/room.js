@@ -232,7 +232,7 @@ exports.startGame = async (room_id, user_id) => {
                 blocks,
                 started_at: moment().format(),
                 started_timestamp: moment().unix(),
-                timer: group.meta_data?.timer || 60000
+                timer: group.meta_data?.timer || 30
             }
             room.status = 'playing';
             await room.save();
@@ -291,7 +291,7 @@ exports.endGame = async (room_id, io) => {
         if (!room) {
             return false;
         }
-        let timer = room.meta_data?.timer * 1000 * 60 || 60000;
+        let timer = room.meta_data?.timer * 1000 * 60 || 30;
         timer = timer + 5000;
         try {
             setTimeout(async () => {
