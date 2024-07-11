@@ -251,14 +251,18 @@ exports.updateRanking = async (room_id, data, io) => {
         if (!room) {
             return false;
         } else {
-            let has_winner = room.users.find(u => u.score >= 5) || false;
+            if (room.status !== 'playing') {
+                return false;
+            }
+            let totalQuestion = room.meta_data?.count || 5;
+            let has_winner = room.users.find(u => u.score >= totalQuestion) || false;
             const users = room.users.map(u => {
                 if (u.user_id === user_id && block.answered === true && !u.blocks.includes(block.block_id)) {
                     u.blocks = [...u.blocks, block.block_id];
                     u.score += 1;
                     u.end_timestamp = moment().unix();
                     u.end_time = moment().diff(moment(room.meta_data.started_at), 'milliseconds');
-                    if (!has_winner && u.score >= 5) {
+                    if (!has_winner && u.score >= totalQuestion) {
                         has_winner = u;
                     }
                 }
@@ -296,10 +300,10 @@ exports.endGame = async (room_id, io) => {
         try {
             setTimeout(async () => {
                 room = await Room.findOne({ room_id });
-                if (room.status === 'finished') {
+                if (room.status !== 'playing') {
                     return;
                 }
-                let winner = await getWinner(room);
+                let winner = getWinner(room);
                 room.status = 'finished';
                 room.meta_data = {
                     ...room.meta_data,
@@ -332,7 +336,6 @@ async function getWinner(room) {
         }
         return b.score - a.score
     })[0];
-
 }
 
 async function saveWithRetry(doc, retries = 3) {
