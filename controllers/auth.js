@@ -10,6 +10,12 @@ exports.register = async (req, res) => {
     try {
         let { name, username, password } = req.body;
         username = username.toLowerCase();
+        if (username.length < 6) {
+            return res.status(400).json({ message: "Username must be at least 6 characters" });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters" });
+        }
         const existingUser = await User.findOne({ username });
         if (existingUser) {
             return res.status(409).json({ message: "Username already exists" });
@@ -40,7 +46,15 @@ exports.login = async (req, res) => {
     try {
         let { username, password } = req.body;
         username = username.toLowerCase();
-
+        if (!username || !password) {
+            return res.status(400).json({ message: "Username and password are required" });
+        }
+        if (username.length < 6) {
+            return res.status(400).json({ message: "Username must be at least 6 characters" });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters" });
+        }
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(404).json({ message: "User not found" });
