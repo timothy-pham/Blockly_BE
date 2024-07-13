@@ -145,6 +145,24 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on("user_finish", async (data) => {
+        console.log("ON FINISH", socket.room_id, socket.user_id, data)
+        const room_data = await roomController.userFinish(socket.room_id, socket.user_id, data);
+        if (room_data) {
+            io.to(socket.room_id).emit("user_finish", room_data);
+            let isAllFinished = true;
+            room_data.users.forEach(user => {
+                if (user.status !== 'finished') {
+                    isAllFinished = false;
+                }
+            });
+            if (isAllFinished) {
+                console.log("END GAME NOW", socket.user_id, socket.room_id)
+                await roomController.endGameNow(socket.room_id, io);
+            }
+        }
+    });
+
     // CHAT
     socket.on("send_message", async (data) => {
         const { room_id, user_id, message } = data;

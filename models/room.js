@@ -32,6 +32,10 @@ const roomSchema = new mongoose.Schema({
                 type: Number,
                 default: 0
             },
+            wrong_answers: {
+                type: Number,
+                default: 0
+            },
             end_timestamp: {
                 type: Number,
             },
@@ -49,6 +53,11 @@ const roomSchema = new mongoose.Schema({
             is_connected: {
                 type: Boolean,
                 default: false
+            },
+            status: {
+                type: String,
+                enum: ['waiting', 'playing', 'finished'],
+                default: 'waiting'
             }
         }],
         required: true

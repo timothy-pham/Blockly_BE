@@ -227,6 +227,12 @@ exports.startGame = async (room_id, user_id) => {
                     }
                 }
             ]);
+            room.users = room.users.map(u => {
+                return {
+                    ...u,
+                    status: 'playing',
+                }
+            }); // set user.status = playing
             room.meta_data = {
                 ...room.meta_data,
                 blocks,
@@ -246,8 +252,9 @@ exports.startGame = async (room_id, user_id) => {
 
 exports.updateRanking = async (room_id, data, io) => {
     try {
+        console.log("UPDATE RANKING", room_id, data)
         const { block, user_id } = data;
-        const room = await Room.findOne({ room_id });
+        let room = await Room.findOne({ room_id });
         if (!room) {
             return false;
         } else {
@@ -255,33 +262,40 @@ exports.updateRanking = async (room_id, data, io) => {
                 return false;
             }
             let totalQuestion = room.meta_data?.count || 5;
-            let has_winner = room.users.find(u => u.score >= totalQuestion) || false;
+
+            console.log("UPDATE RANKING", totalQuestion)
+            let has_winner = false;
             const users = room.users.map(u => {
                 if (u.user_id === user_id && block.answered === true && !u.blocks.includes(block.block_id)) {
                     u.blocks = [...u.blocks, block.block_id];
                     u.score += 1;
                     u.end_timestamp = moment().unix();
                     u.end_time = moment().diff(moment(room.meta_data.started_at), 'milliseconds');
-                    if (!has_winner && u.score >= totalQuestion) {
+                    if (u.score >= totalQuestion) {
                         has_winner = u;
                     }
                 }
                 return u;
             });
             room.users = users;
-            if (has_winner) {
+            console.log("UPDATE RANKING3", has_winner?.user_id, has_winner)
+            if (has_winner?.user_id) {
+                console.log("UPDATE RANKING4", room_id)
                 room.status = 'finished';
                 room.meta_data = {
                     ...room.meta_data,
                     winner: has_winner
                 }
-                await updatePoints(room);
-                io.to(room_id).emit("end_game", room);
+                await room.save();
+                const data = await updatePoints(room);
+                io.to(room_id).emit("end_game", data);
                 winner = has_winner;
                 io.emit("new_winner", { user: winner, room_id: room_id })
+            } else {
+                console.log("UPDATE RANKING5", room_id)
+                await room.save();
+                return room;
             }
-            await room.save();
-            return room;
         }
     } catch (error) {
         return false
@@ -299,23 +313,7 @@ exports.endGame = async (room_id, io) => {
         timer = timer + 5000;
         try {
             setTimeout(async () => {
-                room = await Room.findOne({ room_id });
-                if (room.status !== 'playing') {
-                    return;
-                }
-                let winner = getWinner(room);
-                room.status = 'finished';
-                room.meta_data = {
-                    ...room.meta_data,
-                    winner: winner
-                }
-                room = await saveWithRetry(room);
-                await updatePoints(room);
-                io.to(room_id).emit("end_game", room);
-                winner = await getWinner(room);
-                if (winner?.score > 0) {
-                    io.emit("new_winner", { user: winner, room_id: room_id })
-                }
+                await endGameHandle(room_id, io);
             }, timer);
         } catch (error) {
             console.log("🚀 ~ exports.endGame= ~ error:", error)
@@ -328,6 +326,41 @@ exports.endGame = async (room_id, io) => {
     }
 }
 
+exports.endGameNow = async (room_id, io) => {
+    try {
+        let room = await Room.findOne({ room_id });
+        if (!room) {
+            return false;
+        }
+        await endGameHandle(room_id, io);
+    } catch (error) {
+        console.log("🚀 ~ exports.endGameNow ~ error:", error)
+        return false
+    }
+}
+
+async function endGameHandle(
+    room_id,
+    io
+) {
+    let room = await Room.findOne({ room_id });
+    if (room.status !== 'playing') {
+        return;
+    }
+    let winner = getWinner(room);
+    room.status = 'finished';
+    room.meta_data = {
+        ...room.meta_data,
+        winner: winner
+    }
+    room = await saveWithRetry(room);
+    await updatePoints(room);
+    io.to(room_id).emit("end_game", room);
+    winner = await getWinner(room);
+    if (winner?.score > 0) {
+        io.emit("new_winner", { user: winner, room_id: room_id })
+    }
+}
 async function getWinner(room) {
     const users = room.users;
     return users.sort((a, b) => {
@@ -427,8 +460,13 @@ exports.getUserHistories = async (req, res) => {
     }
 }
 
-const updatePoints = async (room) => {
+const updatePoints = async (room_input) => {
     try {
+        console.log("UPDATE POINTS", room_input.room_id)
+        let room = await Room.findOne({ room_id: room_input.room_id });
+        if (room.status == 'waiting' || room.status == 'playing') {
+            return;
+        }
         const users_played = room.users.filter(u => u.score > 0);
         const user_list = users_played.sort((a, b) => {
             if (a.score === b.score) {
@@ -454,7 +492,7 @@ const updatePoints = async (room) => {
             const new_points = user_data.meta_data?.points ? user_data.meta_data.points + points : points;
             let points_history = user_data.meta_data?.points_history || [];
             let matches = user_data.meta_data?.matches || 0;
-
+            console.log("OLD meta_data", user_data?.name, user_data.meta_data)
             points_history.push({
                 room_id: room.room_id,
                 points,
@@ -467,7 +505,7 @@ const updatePoints = async (room) => {
                 matches: matches + 1,
                 points_history
             };
-
+            console.log("NEW meta_data", user_data?.name, user_data.meta_data)
             await user_data.save();
             const oldUser = room.users.find(u => u.user_id === user.user_id)
             oldUser.user_data = {
@@ -475,7 +513,7 @@ const updatePoints = async (room) => {
                 meta_data: user_data.meta_data
             }
         }
-        await room.save();
+        return await room.save();
     } catch (error) {
         console.log("🚀 ~ updatePoints ~ error:", error);
     }
@@ -511,5 +549,27 @@ exports.kickUser = async (room_id, data, host_id) => {
         return { room_data: room, userKicked }
     } catch (error) {
         console.log("KICK USER ERROR", error);
+    }
+}
+
+exports.userFinish = async (room_id, user_id, data) => {
+    try {
+        const wrong_answers = data.wrong_answers;
+        console.log("USER FINISH", room_id, user_id, data)
+        const room = await Room.findOne({ room_id })
+        if (!room) {
+            return false;
+        }
+        const user = room.users.find(u => u.user_id === user_id);
+        if (!user) {
+            return false;
+        }
+        user.wrong_answers = wrong_answers;
+        user.status = 'finished';
+        await room.save();
+        return room;
+    } catch (error) {
+        console.log("USER FINISH ERROR", error);
+        return false
     }
 }
