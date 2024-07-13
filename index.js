@@ -122,6 +122,13 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on("kick_user", async (data) => {
+        const { room_data, userKicked } = await roomController.kickUser(socket.room_id, data, socket.user_id);
+        if (room_data && userKicked) {
+            io.to(socket.room_id).emit("kick_user", { room_data, userKicked });
+        }
+    });
+
     socket.on("start_game", async () => {
         const room_data = await roomController.startGame(socket.room_id, socket.user_id);
         if (room_data) {

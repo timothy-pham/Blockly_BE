@@ -480,3 +480,36 @@ const updatePoints = async (room) => {
         console.log("🚀 ~ updatePoints ~ error:", error);
     }
 };
+
+exports.kickUser = async (room_id, data, host_id) => {
+    try {
+        // check is host
+        const room = await Room.findOne({ room_id });
+        if (!room) {
+            return false;
+        }
+        const isHost = room.users.find(u => u.user_id === host_id && u.is_host);
+        if (!isHost) {
+            return false;
+        }
+        const user_id = data.user_id;
+        const users = room.users;
+        const user = users.find(u => u.user_id === user_id);
+        if (!user) {
+            return false;
+        }
+        const index = users.findIndex(u => u.user_id === user_id);
+        const userKicked = users[index];
+        console.log("KICK USER", userKicked?.user_data?.name)
+        users.splice(index, 1);
+        room.meta_data = {
+            ...room.meta_data,
+            total_users: room.meta_data.total_users - 1
+        }
+        room.users = users;
+        await room.save();
+        return { room_data: room, userKicked }
+    } catch (error) {
+        console.log("KICK USER ERROR", error);
+    }
+}
