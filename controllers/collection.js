@@ -1,8 +1,10 @@
 const Collection = require("../models/collection");
 const Group = require("../models/group");
 const Block = require("../models/block");
-
 const moment = require('moment');
+const { encryptJSON, decrypt } = require('../utils/encryption');
+const encryptKey = process.env.ENCRYPT_KEY;
+
 exports.getAllCollections = async (req, res) => {
     try {
         const collections = await Collection.find();
@@ -119,8 +121,8 @@ exports.exportCollection = async (req, res) => {
             collections[i] = collections[i].toObject(); // Convert to plain object if it's a Mongoose document
             collections[i].groups = groups;
         }
-
-        res.status(200).json(collections);
+        const encryptData = encryptJSON(collections, encryptKey);
+        res.status(200).send(encryptData);
     } catch (error) {
         console.error("BLOCKS_GET_ERROR", error);
         res.status(500).json({ message: error.message });
@@ -129,8 +131,9 @@ exports.exportCollection = async (req, res) => {
 
 exports.importCollection = async (req, res) => {
     try {
-        const collections = req.body;
-
+        const data = req.body.data;
+        const decryptedData = decrypt(data, encryptKey);
+        const collections = JSON.parse(decryptedData);
         for (let i = 0;i < collections.length;i++) {
             let collection = collections[i];
             let groups = collection.groups;

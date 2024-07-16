@@ -2,6 +2,8 @@ const Block = require("../models/block");
 const Group = require("../models/group");
 const Room = require("../models/room");
 const moment = require('moment');
+const { encryptJSON, decrypt } = require('../utils/encryption');
+const encryptKey = process.env.ENCRYPT_KEY;
 
 exports.getAllBlocks = async (req, res) => {
     try {
@@ -185,9 +187,8 @@ exports.exportBlocks = async (req, res) => {
                 }
             }
         ]);
-        res.set('Content-Type', 'application/json');
-        res.set('Content-Disposition', 'attachment; filename=data.json');
-        res.send(Buffer.from(JSON.stringify(blocks, null, 2)));
+        const encryptedBlocks = encryptJSON(blocks, encryptKey);
+        res.status(200).send(encryptedBlocks);
     } catch (error) {
         console.log("BLOCKS_GET_ERROR", error)
         res.status(500).json({ message: error });
@@ -196,7 +197,9 @@ exports.exportBlocks = async (req, res) => {
 
 exports.importBlocks = async (req, res) => {
     try {
-        const blocks = req.body;
+        const data = req.body.data;
+        const decryptedData = decrypt(data, encryptKey);
+        const blocks = JSON.parse(decryptedData);
         await Block.create(blocks);
         res.status(201).json({ message: "Blocks imported successfully" });
     } catch (error) {

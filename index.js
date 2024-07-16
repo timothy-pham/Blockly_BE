@@ -7,7 +7,7 @@ const swaggerJsDoc = require("swagger-jsdoc");
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const http = require('http');
-
+const { encryptJSON, decrypt } = require('./utils/encryption');
 require('dotenv').config()
 
 // Swagger
@@ -46,9 +46,12 @@ app.use(express.json());
 app.use(morgan("dev"));
 // Cấu hình parser
 app.use(cookieParser());
-app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }))
-app.use(bodyParser.json({ limit: '10mb' }))
-
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({
+    limit: '50mb',
+    extended: true,
+    parameterLimit: 50000
+}));
 // Database
 // Database - Connect
 const Room = require('./models/room');
