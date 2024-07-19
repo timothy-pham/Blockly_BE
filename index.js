@@ -42,12 +42,11 @@ app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs, {
     customSiteTitle: 'Blockly API Docs - DATONS',
 }));
 app.use(cors());
-app.use(express.json());
 app.use(morgan("dev"));
 // Cấu hình parser
 app.use(cookieParser());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb' }));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // Database
 // Database - Connect
 const Room = require('./models/room');
@@ -67,6 +66,9 @@ const deleteWaitingRooms = async () => {
     try {
         const result = await Room.deleteMany({ status: 'waiting' });
         console.log(`Deleted ${result.deletedCount} rooms with status 'waiting'`);
+        // set all rooms playing to finished
+        const result2 = await Room.updateMany({ status: 'playing' }, { status: 'finished' });
+        console.log(`Updated ${result2.modifiedCount} rooms with status 'playing' to 'finished'`);
     } catch (error) {
         console.error('Error deleting rooms with status waiting', error);
     }
@@ -102,7 +104,6 @@ io.on('connection', (socket) => {
             // Emit to the room that a user has joined
             if (room_data) {
                 io.to(data.room_id).emit("user_joined", room_data);
-                console.log("NEW USER", JSON.stringify(data.user))
                 io.to(data.room_id).emit("receive_messages", [
                     { user_id: data?.user_id, message: `${data.user?.name} vừa tham gia vào phòng!` }
                 ]);
@@ -134,18 +135,26 @@ io.on('connection', (socket) => {
             console.log("START GAME", socket.room_id)
             io.to(socket.room_id).emit("start_game", room_data);
             await roomController.endGame(socket.room_id, io);
+            io.emit("refresh_rooms");
         }
     });
 
     socket.on("ranking_update", async (data) => {
-        const room_data = await roomController.updateRanking(socket.room_id, { user_id: socket.user_id, block: data }, io);
-        if (room_data) {
-            io.to(socket.room_id).emit("ranking_update", room_data);
+        if (data?.wrong) {
+            const room_data = await roomController.updateWrong(socket.room_id, { user_id: socket.user_id, block: data }, io);
+            if (room_data) {
+                io.to(socket.room_id).emit("ranking_update", room_data);
+            }
+        } else {
+            const room_data = await roomController.updateRanking(socket.room_id, { user_id: socket.user_id, block: data }, io);
+            if (room_data) {
+                io.to(socket.room_id).emit("ranking_update", room_data);
+            }
         }
+
     });
 
     socket.on("user_finish", async (data) => {
-        console.log("ON FINISH", socket.room_id, socket.user_id, data)
         const room_data = await roomController.userFinish(socket.room_id, socket.user_id, data);
         if (room_data) {
             io.to(socket.room_id).emit("user_finish", room_data);
@@ -156,7 +165,6 @@ io.on('connection', (socket) => {
                 }
             });
             if (isAllFinished) {
-                console.log("END GAME NOW", socket.user_id, socket.room_id)
                 await roomController.endGameNow(socket.room_id, io);
             }
         }

@@ -33,8 +33,8 @@ const roomSchema = new mongoose.Schema({
                 default: 0
             },
             wrong_answers: {
-                type: Number,
-                default: 0
+                type: Object,
+                default: {}
             },
             end_timestamp: {
                 type: Number,
