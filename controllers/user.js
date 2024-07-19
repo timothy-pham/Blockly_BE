@@ -104,8 +104,8 @@ exports.updateUser = async (req, res) => {
                 return res.status(400).json({ message: "You are not authorized to update role to admin" });
             }
             if (role) user.role = role;
-
         }
+
         if (name) user.name = name;
         if (email) user.email = email;
         if (meta_data) user.meta_data = {

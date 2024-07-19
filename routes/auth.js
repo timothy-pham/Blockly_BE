@@ -4,6 +4,8 @@ const controller = require("../controllers/auth");
 const { authenticate } = require("../middlewares/auth");
 router.post("/login", controller.login);
 
+router.post("/login-google", controller.loginGoogle);
+
 router.post("/reset-password", authenticate, controller.resetPassword);
 
 router.post("/register", controller.register);

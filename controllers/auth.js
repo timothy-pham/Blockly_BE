@@ -5,6 +5,7 @@ const SALT_ROUNDS = require('../configs/auth').SALT_ROUNDS;
 const generateToken = require('../middlewares/auth').generateToken;
 const { nanoid } = require('nanoid');
 const { decodeToken } = require('../middlewares/auth');
+const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
     try {
@@ -47,22 +48,22 @@ exports.login = async (req, res) => {
         let { username, password } = req.body;
         username = username.toLowerCase();
         if (!username || !password) {
-            return res.status(400).json({ message: "Username and password are required" });
+            return res.status(400).json({ message: "Sai tài khoản hoặc mật khẩu" });
         }
         if (username.length < 6) {
-            return res.status(400).json({ message: "Username must be at least 6 characters" });
+            return res.status(400).json({ message: "Sai tài khoản hoặc mật khẩu" });
         }
         if (password.length < 6) {
-            return res.status(400).json({ message: "Password must be at least 6 characters" });
+            return res.status(400).json({ message: "Sai tài khoản hoặc mật khẩu" });
         }
         const user = await User.findOne({ username });
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: "Sai tài khoản hoặc mật khẩu" });
         }
 
         const match = await bcrypt.compare(password, user.password);
         if (!match) {
-            return res.status(401).json({ message: "Invalid credentials" });
+            return res.status(401).json({ message: "Sai tài khoản hoặc mật khẩu" });
         }
 
         const token = generateToken(user);
@@ -130,6 +131,64 @@ exports.resetPassword = async (req, res) => {
         res.status(200).json({ message: "Password updated" });
     } catch (error) {
         console.log("USERS_RESET_PASSWORD_ERROR", error)
+        res.status(500).json({ message: error });
+    }
+}
+
+exports.loginGoogle = async (req, res) => {
+    try {
+        const credentialData = req.body;
+        const data = jwt.decode(credentialData?.credential);
+        if (!data) {
+            return res.status(400).json({ message: "Invalid credential" });
+        }
+        const { email, name, picture } = data;
+        if (!email || !name) {
+            return res.status(400).json({ message: "Invalid credential" });
+        }
+        const user = await User.findOne({
+            username: email
+        })
+
+        if (!user) {
+            const newUser = new User({
+                name,
+                username: email,
+                meta_data: {
+                    login_google: true,
+                    points: 0,
+                    matches: 0,
+                    avatar: picture || null
+                },
+                created_at: moment().format('MM/DD/YYYY, hh:mm:ss'),
+                updated_at: moment().format('MM/DD/YYYY, hh:mm:ss'),
+                timestamp: moment().unix()
+            });
+            await newUser.save();
+            const token = generateToken(newUser);
+            let refresh_token = null;
+            if (newUser.refresh_token) {
+                refresh_token = newUser.refresh_token;
+            } else {
+                refresh_token = nanoid(32);
+                newUser.refresh_token = refresh_token;
+                await newUser.save();
+            }
+            res.status(201).json({ token, refresh_token, user: { name: newUser.name, username: newUser.username, user_id: newUser.user_id, role: newUser.role, meta_data: newUser.meta_data } });
+        } else {
+            const token = generateToken(user);
+            let refresh_token = null;
+            if (user.refresh_token) {
+                refresh_token = user.refresh_token;
+            } else {
+                refresh_token = nanoid(32);
+                user.refresh_token = refresh_token;
+                await user.save();
+            }
+            res.status(200).json({ token, refresh_token, user: { name: user.name, username: user.username, user_id: user.user_id, role: user.role, meta_data: user.meta_data } });
+        }
+    } catch (error) {
+        console.log("USERS_LOGIN_GOOGLE_ERROR", error)
         res.status(500).json({ message: error });
     }
 }
