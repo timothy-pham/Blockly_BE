@@ -154,6 +154,26 @@ io.on('connection', (socket) => {
 
     });
 
+    // THEO DÕI thi đấu
+    socket.on("follow_user", (data) => {
+        const { user_to, room_id } = data;
+        socket.join(`follow_${user_to}_${room_id}`);
+        // console.log("Follow", `follow_${user_to}_${room_id}`);
+    });
+
+    socket.on('cursorPosition', (data) => {
+        const { position, userId } = data;
+        // console.log("CURSOR POSITION", data, `follow_${userId}_${socket.room_id}`);
+        io.to(`follow_${userId}_${socket.room_id}`).emit('cursorPosition', position);
+    });
+
+    socket.on("unfollow_user", (data) => {
+        const { user_to, room_id } = data;
+        socket.leave(`follow_${user_to}_${room_id}`);
+        // console.log("Unfollow", `follow_${user_to}_${room_id}`);
+    });
+    // END THEO DÕI
+
     socket.on("user_finish", async (data) => {
         const room_data = await roomController.userFinish(socket.room_id, socket.user_id, data);
         if (room_data) {

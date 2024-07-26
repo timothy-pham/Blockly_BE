@@ -223,6 +223,7 @@ exports.startGame = async (room_id, user_id) => {
                 },
                 {
                     $project: {
+                        answers: 0,
                         created_at: 0,
                         updated_at: 0,
                         __v: 0,
