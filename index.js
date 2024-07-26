@@ -88,9 +88,17 @@ const io = socketIO(server, {
     }
 });
 
-const roomController = require("./controllers/room");
-const messageController = require("./controllers/message");
+
+const onlineUsers = {};
 io.on('connection', (socket) => {
+    socket.on('user_connected', (data) => {
+        onlineUsers[socket.id] = {
+            user_id: data?.user_id,
+            user: data
+        };
+        io.onlineUsers = onlineUsers;
+        socket.join(`user_${data?.user_id}`);
+    });
     // COMPETITION 
     socket.on("join_room", async (data) => {
         try {
@@ -174,6 +182,12 @@ io.on('connection', (socket) => {
     });
     // END THEO DÕI
 
+    // Mời người chơi
+    socket.on("invite_user", async (data) => {
+        const { room, user_id } = data;
+        io.to(`user_${user_id}`).emit("invite_user", { room: room, user_from: socket.user });
+    });
+
     socket.on("user_finish", async (data) => {
         const room_data = await roomController.userFinish(socket.room_id, socket.user_id, data);
         if (room_data) {
@@ -212,8 +226,9 @@ io.on('connection', (socket) => {
 
     // DISCONNECT
     socket.on('disconnect', () => {
-        console.log('User disconnected');
-        console.log(`User ID: ${socket.user_id}, Room ID: ${socket.room_id}`);
+        delete onlineUsers[socket.id];
+        io.onlineUsers = onlineUsers;
+        console.log(`User Disconect - UserID: ${socket.user_id}, Room ID: ${socket.room_id}`);
         roomController.leaveRoom(socket.room_id, socket.user_id);
         io.to(socket.room_id).emit("user_left", socket.user_id);
     });
@@ -226,6 +241,8 @@ const attachIO = (req, res, next) => {
 };
 
 app.use(attachIO);
+const roomController = require("./controllers/room");
+const messageController = require("./controllers/message");
 const { authenticate } = require("./middlewares/auth.js");
 app.use("/", require("./routes/index"));
 app.use("/collections", authenticate, require("./routes/collections"));

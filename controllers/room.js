@@ -72,6 +72,18 @@ exports.createRoom = async (req, res) => {
     }
 }
 
+exports.getUsersOnline = async (req, res) => {
+    try {
+        const io = req.io;
+        // parse onject to array
+        const onlineUsers = Object.values(io.onlineUsers);
+        res.status(200).json(onlineUsers);
+    } catch (error) {
+        console.log("GET USERS ONLINE ERROR", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
 
 
 // SOCKET PART
