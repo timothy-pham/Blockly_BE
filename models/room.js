@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
-
+const { Schema } = mongoose;
 
 const roomSchema = new mongoose.Schema({
     name: {
@@ -18,7 +18,7 @@ const roomSchema = new mongoose.Schema({
     users: {
         type: [{
             user_id: {
-                type: Number,
+                type: Schema.Types.Mixed,
                 required: true
             },
             user_data: {
@@ -58,6 +58,14 @@ const roomSchema = new mongoose.Schema({
                 type: String,
                 enum: ['waiting', 'playing', 'finished'],
                 default: 'waiting'
+            },
+            is_bot: {
+                type: Boolean,
+                default: false
+            },
+            level: {
+                type: String,
+                enum: ['easy', 'medium', 'hard', 'hell'],
             }
         }],
         required: true

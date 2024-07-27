@@ -5,6 +5,7 @@ const Collection = require("../models/collection");
 const Group = require("../models/group");
 const Block = require("../models/block");
 const moment = require('moment');
+const { botConfig } = require("../utils/bot_config");
 
 exports.getAllRooms = async (req, res) => {
     try {
@@ -37,6 +38,23 @@ exports.getRoom = async (req, res) => {
         }
     } catch (error) {
         console.log("GET ROOM ERROR", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+exports.getBotConfig = async (req, res) => {
+    try {
+        const levels = Object.keys(botConfig.levels);
+        let data = []
+        for (const level of levels) {
+            data.push({
+                name: botConfig.levels[level].name,
+                level: level
+            });
+        }
+        res.status(200).json(data);
+    } catch (error) {
+        console.log("GET BOT CONFIG ERROR", error);
         res.status(500).json({ message: "Internal server error" });
     }
 }
@@ -281,7 +299,7 @@ exports.updateRanking = async (room_id, data, io) => {
 
             let has_winner = false;
             const users = room.users.map(u => {
-                if (u.user_id === user_id && block.answered === true && !u.blocks.includes(block.block_id)) {
+                if (u.user_id === user_id && !u.blocks.includes(block.block_id)) {
                     u.blocks = [...u.blocks, block.block_id];
                     u.score += 1;
                     u.end_timestamp = moment().unix();
@@ -548,7 +566,9 @@ const updatePoints = async (room_input) => {
             } else {
                 points = 5;
             }
-
+            if (user.is_bot) {
+                continue;
+            }
             const user_data = await User.findOne({ user_id: user.user_id });
             const new_points = user_data.meta_data?.points ? user_data.meta_data.points + points : points;
             let points_history = user_data.meta_data?.points_history || [];
@@ -613,7 +633,7 @@ exports.kickUser = async (room_id, data, host_id) => {
     }
 }
 
-exports.userFinish = async (room_id, user_id, data) => {
+const userFinishhandle = async (room_id, user_id, data) => {
     try {
         const room = await Room.findOne({ room_id })
         if (!room) {
@@ -628,6 +648,205 @@ exports.userFinish = async (room_id, user_id, data) => {
         return room;
     } catch (error) {
         console.log("USER FINISH ERROR", error);
+        return false
+    }
+}
+exports.userFinish = async (room_id, user_id, data) => {
+    userFinishhandle(room_id, user_id, data);
+}
+
+exports.addBot = async (room_id, data) => {
+    try {
+        let room = await Room.findOne({ room_id });
+        if (!room) {
+            return false;
+        }
+        const name = botConfig.names[Math.floor(Math.random() * botConfig.names.length)] + " " + botConfig.levels[data.bot_level].name.split(" - ")[0];
+        const count = room.users.find(u => u.user_id.toString().includes("bot_")) ? room.users.filter(u => u.user_id.toString().includes("bot_")).length : 0;
+        const user = {
+            user_id: "bot_" + count,
+            user_data: {
+                name,
+                user_id: "bot_" + count,
+                role: "student",
+                meta_data: {
+                    avatar: "/bot_avatar.jpg",
+                    points: 0,
+                    matches: 0,
+                }
+            },
+            is_ready: true,
+            is_host: false,
+            is_connected: true,
+            is_bot: true,
+            level: data.bot_level,
+            status: 'waiting',
+            blocks: [],
+            score: 0,
+            end_timestamp: moment().unix(),
+            end_time: '0',
+        }
+        room.users.push(user);
+        await room.save();
+        return room;
+    } catch (error) {
+        console.log("ADD BOT ERROR", error);
+        return false
+    }
+}
+
+exports.handleBot = async (room_id, io) => {
+    try {
+        const room = await Room.findOne({ room_id });
+        if (!room) {
+            return false;
+        }
+        const bots = room.users.filter(u => u.is_bot);
+        if (bots.length === 0) {
+            return false;
+        }
+        console.log("HANDLE BOT", bots.length)
+        for (const bot of bots) {
+            const bot_level = bot.level;
+            const bot_id = bot.user_id;
+            const bot_config = botConfig.levels[bot_level];
+            const bot_data = {
+                room_id,
+                bot_id,
+                bot_level,
+                bot_config,
+                room_id,
+                io
+            }
+            botAction(bot_data);
+        }
+        return true;
+    } catch (error) {
+        console.log("HANDLE BOT ERROR", error);
+        return false;
+    }
+}
+
+const botAction = async (bot_data) => {
+    try {
+        const time = Math.floor(Math.random() * (bot_data.bot_config.maxTime - bot_data.bot_config.minTime + 1) + bot_data.bot_config.minTime);
+        console.log("BOT ACTION time", time)
+        const room = await Room.findOne({ room_id: bot_data.room_id });
+        const blocks = room.meta_data.blocks;
+        const bot_config = bot_data.bot_config;
+        console.log("BOT ACTION config", bot_config)
+        // wait 5 seconds
+        await new Promise((resolve) => {
+            setTimeout(() => {
+                resolve();
+            }, 5000);
+        });
+        // Sử dụng for..of và await để đảm bảo thứ tự thực thi
+        for (const block of blocks) {
+            const percentAnswer = bot_config.percentAnswer * 100;
+
+            const randomNum = Math.random() * 100;
+            console.log("BOT ACTION compare", randomNum, percentAnswer)
+            const is_True = randomNum < percentAnswer;
+
+            const data = {
+                block,
+                user_id: bot_data.bot_id,
+                wrong: !is_True
+            }
+
+            console.log("BOT DATA UPDATE", block.block_id, is_True, bot_data.bot_id)
+
+            await new Promise((resolve) => {
+                setTimeout(async () => {
+                    await updateRankingBot(bot_data.room_id, data, bot_data.io);
+                    resolve(); // Đánh dấu công việc đã hoàn thành
+                }, time * 1000);
+            });
+        }
+        const finishData = await userFinishhandle(bot_data.room_id, bot_data.bot_id, {});
+        if (finishData) {
+            bot_data.io.to(bot_data.room_id).emit("user_finish", finishData);
+            let isAllFinished = true;
+            finishData.users.forEach(user => {
+                if (user.status !== 'finished') {
+                    isAllFinished = false;
+                }
+            });
+            if (isAllFinished) {
+                await this.endGameNow(bot_data.room_id, bot_data.io);
+            }
+        }
+    } catch (error) {
+        console.log("BOT ACTION ERROR", error);
+        return false;
+    }
+}
+
+
+const updateRankingBot = async (room_id, data, io) => {
+    try {
+        const { block, user_id, wrong } = data;
+        let room = await Room.findOne({ room_id });
+        if (!room) {
+            return false;
+        } else {
+            if (room.status !== 'playing') {
+                return false;
+            }
+            let totalQuestion = room.meta_data?.count || 5;
+            if (!wrong) {
+                let has_winner = false;
+                const users = room.users.map(u => {
+                    if (u.user_id === user_id && !u.blocks.includes(block.block_id)) {
+                        u.blocks = [...u.blocks, block.block_id];
+                        u.score += 1;
+                        u.end_timestamp = moment().unix();
+                        u.end_time = moment().diff(moment(room.meta_data.started_at), 'milliseconds');
+                        if (u.score >= totalQuestion) {
+                            has_winner = u;
+                        }
+                    }
+                    return u;
+                });
+                room.users = users;
+                if (has_winner?.user_id) {
+                    room.status = 'finished';
+                    room.meta_data = {
+                        ...room.meta_data,
+                        winner: has_winner
+                    }
+                    await room.save();
+                    const data = await updatePoints(room);
+                    io.to(room_id).emit("end_game", data);
+                    winner = has_winner;
+                    io.emit("new_winner", { user: winner, room_id: room_id })
+                    io.emit("refresh_rooms");
+                } else {
+                    await room.save();
+                }
+            } else {
+                const userIndex = room.users.findIndex(u => u.user_id === user_id);
+                if (userIndex === -1) {
+                    return false;
+                }
+                let user = room.users[userIndex];
+                user.wrong_answers[block.block_id] = 3;
+                user.blocks.push(block.block_id);
+                room.users[userIndex] = user; // Updating the user in the array
+
+                await Room.updateOne(
+                    { room_id, 'users.user_id': user_id },
+                    {
+                        '$set': {
+                            'users.$': user
+                        }
+                    }
+                );
+            }
+            io.to(room_id).emit("ranking_update", room);
+        }
+    } catch (error) {
         return false
     }
 }

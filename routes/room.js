@@ -7,6 +7,8 @@ router.get("/", controller.getAllRooms);
 
 router.get("/users-online", controller.getUsersOnline);
 
+router.get("/bot-config", controller.getBotConfig);
+
 router.get("/histories", controller.getRoomHistories);
 
 router.get("/histories/students", controller.getRoomHistoriesStudents);

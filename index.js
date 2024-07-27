@@ -142,6 +142,7 @@ io.on('connection', (socket) => {
         if (room_data) {
             console.log("START GAME", socket.room_id)
             io.to(socket.room_id).emit("start_game", room_data);
+            await roomController.handleBot(socket.room_id, io);
             await roomController.endGame(socket.room_id, io);
             io.emit("refresh_rooms");
         }
@@ -203,6 +204,16 @@ io.on('connection', (socket) => {
             }
         }
     });
+    // ADD BOT
+    socket.on("add_bot", async (data) => {
+        const room_data = await roomController.addBot(socket.room_id, data);
+        if (room_data) {
+            io.to(data.room_id).emit("user_joined", room_data);
+            io.to(data.room_id).emit("new_user", { user_id: data.user_id })
+        }
+    });
+
+    // END COMPETITION
 
     // CHAT
     socket.on("send_message", async (data) => {
