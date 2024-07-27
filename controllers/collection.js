@@ -3,6 +3,7 @@ const Group = require("../models/group");
 const Block = require("../models/block");
 const moment = require('moment');
 const { encryptJSON, decrypt } = require('../utils/encryption');
+require('dotenv').config()
 const encryptKey = process.env.ENCRYPT_KEY;
 
 exports.getAllCollections = async (req, res) => {

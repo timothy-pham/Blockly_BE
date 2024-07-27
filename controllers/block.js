@@ -2,7 +2,8 @@ const Block = require("../models/block");
 const Group = require("../models/group");
 const Room = require("../models/room");
 const moment = require('moment');
-const { encryptJSON, decrypt } = require('../utils/encryption');
+const { encryptJSON, decrypt } = require('../utils/encryption')
+require('dotenv').config()
 const encryptKey = process.env.ENCRYPT_KEY;
 
 exports.getAllBlocks = async (req, res) => {
