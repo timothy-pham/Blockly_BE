@@ -182,7 +182,7 @@ exports.exportGroups = async (req, res) => {
         const { ids, raw_data } = req.body.ids;
         // Fetch all groups
         let groups = await Group.find(
-            ids ? { group_id: { $in: ids } } : {}
+            ids && ids.length > 0 ? { group_id: { $in: ids } } : {}
         );
 
         if (!raw_data) {

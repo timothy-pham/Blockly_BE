@@ -111,7 +111,7 @@ exports.exportCollection = async (req, res) => {
         const { ids, raw_data } = req.body.ids;
         // Fetch all collections
         let collections = await Collection.find(
-            ids ? { collection_id: { $in: ids } } : {}
+            ids && ids.length > 0 ? { collection_id: { $in: ids } } : {}
         );
         if (!raw_data) {
             for (let i = 0;i < collections.length;i++) {
