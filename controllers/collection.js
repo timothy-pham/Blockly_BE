@@ -108,21 +108,26 @@ exports.deleteCollection = async (req, res) => {
 
 exports.exportCollection = async (req, res) => {
     try {
+        const { ids, raw_data } = req.body.ids;
         // Fetch all collections
-        let collections = await Collection.find();
+        let collections = await Collection.find(
+            ids ? { collection_id: { $in: ids } } : {}
+        );
+        if (!raw_data) {
+            for (let i = 0;i < collections.length;i++) {
+                let groups = await Group.find({ collection_id: collections[i].collection_id });
+                for (let j = 0;j < groups.length;j++) {
+                    let blocks = await Block.find({ group_id: groups[j].group_id });
+                    groups[j] = groups[j].toObject(); // Convert to plain object if it's a Mongoose document
+                    groups[j].blocks = blocks;
+                }
 
-        for (let i = 0;i < collections.length;i++) {
-            let groups = await Group.find({ collection_id: collections[i].collection_id });
-            for (let j = 0;j < groups.length;j++) {
-                let blocks = await Block.find({ group_id: groups[j].group_id });
-                groups[j] = groups[j].toObject(); // Convert to plain object if it's a Mongoose document
-                groups[j].blocks = blocks;
+                collections[i] = collections[i].toObject(); // Convert to plain object if it's a Mongoose document
+                collections[i].groups = groups;
             }
-
-            collections[i] = collections[i].toObject(); // Convert to plain object if it's a Mongoose document
-            collections[i].groups = groups;
         }
-        const encryptData = encryptJSON(collections, encryptKey);
+        const key = encryptKey + "collection";
+        const encryptData = encryptJSON(collections, key);
         res.status(200).send(encryptData);
     } catch (error) {
         console.error("BLOCKS_GET_ERROR", error);
@@ -133,7 +138,8 @@ exports.exportCollection = async (req, res) => {
 exports.importCollection = async (req, res) => {
     try {
         const data = req.body.data;
-        const decryptedData = decrypt(data, encryptKey);
+        const key = encryptKey + "collection";
+        const decryptedData = decrypt(data, key);
         const collections = JSON.parse(decryptedData);
         for (let i = 0;i < collections.length;i++) {
             let collection = collections[i];

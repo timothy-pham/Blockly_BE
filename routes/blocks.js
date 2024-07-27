@@ -9,13 +9,13 @@ router.get("/search", controller.searchBlocks);
 
 router.get("/random", controller.getRandomBlocks);
 
-router.get("/export", authorize(['admin']), controller.exportBlocks);
-
 router.get("/:id", controller.getBlockById);
 
 router.post("/check-answer", controller.checkAnswer);
 
 router.post("/", authorize(['admin']), controller.createBlock);
+
+router.post("/export", authorize(['admin']), controller.exportBlocks);
 
 router.post("/import", authorize(['admin']), controller.importBlocks);
 

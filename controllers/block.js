@@ -173,22 +173,33 @@ exports.deleteBlock = async (req, res) => {
 
 exports.exportBlocks = async (req, res) => {
     try {
+        const { ids, raw_data } = req.body;
+        const projectFilter = {
+            created_at: 0,
+            updated_at: 0,
+            __v: 0,
+            _id: 0,
+            timestamp: 0,
+            block_id: 0,
+        }
+        if (raw_data) {
+            projectFilter.group_id = 0;
+        }
         const blocks = await Block.aggregate([
+            {
+                $match: {
+                    block_id: ids && ids.length > 0 ? { $in: ids } : { $exists: true }
+                }
+            },
             {
                 $sort: { block_id: 1 }
             },
             {
-                $project: {
-                    created_at: 0,
-                    updated_at: 0,
-                    __v: 0,
-                    _id: 0,
-                    timestamp: 0,
-                    block_id: 0,
-                }
+                $project: projectFilter
             }
         ]);
-        const encryptedBlocks = encryptJSON(blocks, encryptKey);
+        const key = encryptKey + "block";
+        const encryptedBlocks = encryptJSON(blocks, key);
         res.status(200).send(encryptedBlocks);
     } catch (error) {
         console.log("BLOCKS_GET_ERROR", error)
@@ -199,7 +210,8 @@ exports.exportBlocks = async (req, res) => {
 exports.importBlocks = async (req, res) => {
     try {
         const data = req.body.data;
-        const decryptedData = decrypt(data, encryptKey);
+        const key = encryptKey + "block";
+        const decryptedData = decrypt(data, key);
         const blocks = JSON.parse(decryptedData);
         await Block.create(blocks);
         res.status(201).json({ message: "Blocks imported successfully" });

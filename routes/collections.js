@@ -4,9 +4,9 @@ const controller = require("../controllers/collection");
 const { authorize } = require("../middlewares/auth.js");
 
 router.get("/", controller.getAllCollections);
-router.get("/export", authorize(['admin']), controller.exportCollection);
 router.get("/:id", controller.getCollectionById);
-router.post("/", authorize(['admin']), controller.createCollection);
+router.post("/", authorize(['admin']), controller.createCollection)
+router.post("/export", authorize(['admin']), controller.exportCollection);
 router.post("/import", authorize(['admin']), controller.importCollection);
 router.patch("/:id", authorize(['admin']), controller.updateCollection);
 router.delete("/:id", authorize(['admin']), controller.deleteCollection);

@@ -5,10 +5,10 @@ const { authorize } = require("../middlewares/auth.js");
 
 router.get("/", controller.getAllGroups);
 router.get('/search', controller.searchGroups);
-router.get("/export", authorize(['admin']), controller.exportGroups);
 router.get("/:id", controller.getGroupById);
 router.post("/", authorize(['admin']), controller.createGroup);
 router.post("/import", authorize(['admin']), controller.importGroups);
+router.post("/export", authorize(['admin']), controller.exportGroups);
 router.patch("/:id", authorize(['admin']), controller.updateGroup);
 router.delete("/:id", authorize(['admin']), controller.deleteGroup);
 

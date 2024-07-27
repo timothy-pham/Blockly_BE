@@ -179,15 +179,21 @@ exports.searchGroups = async (req, res) => {
 
 exports.exportGroups = async (req, res) => {
     try {
+        const { ids, raw_data } = req.body.ids;
         // Fetch all groups
-        let groups = await Group.find();
+        let groups = await Group.find(
+            ids ? { group_id: { $in: ids } } : {}
+        );
 
-        for (let i = 0;i < groups.length;i++) {
-            let blocks = await Block.find({ group_id: groups[i].group_id });
-            groups[i] = groups[i].toObject(); // Convert to plain object if it's a Mongoose document
-            groups[i].blocks = blocks;
+        if (!raw_data) {
+            for (let i = 0;i < groups.length;i++) {
+                let blocks = await Block.find({ group_id: groups[i].group_id });
+                groups[i] = groups[i].toObject(); // Convert to plain object if it's a Mongoose document
+                groups[i].blocks = blocks;
+            }
         }
-        const encryptData = encryptJSON(groups, encryptKey);
+        const key = encryptKey + "group";
+        const encryptData = encryptJSON(groups, key);
         res.status(200).send(encryptData);
     } catch (error) {
         console.error("GROUPS_GET_ERROR", error);
@@ -198,7 +204,8 @@ exports.exportGroups = async (req, res) => {
 exports.importGroups = async (req, res) => {
     try {
         const data = req.body.data;
-        const decryptedData = decrypt(data, encryptKey);
+        const key = encryptKey + "group";
+        const decryptedData = decrypt(data, key);
         const groups = JSON.parse(decryptedData);
 
         for (let i = 0;i < groups.length;i++) {
