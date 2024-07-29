@@ -746,8 +746,8 @@ const botAction = async (bot_data) => {
             const percentAnswer = bot_config.percentAnswer * 100;
 
             const randomNum = Math.random() * 100;
-            console.log("BOT ACTION compare", randomNum, percentAnswer)
-            const is_True = randomNum < percentAnswer;
+
+            const is_True = randomNum <= percentAnswer;
 
             const data = {
                 block,

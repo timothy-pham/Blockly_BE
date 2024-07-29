@@ -23,34 +23,26 @@ const botConfig = {
     ],
     levels: {
         "easy": {
-            minTime: 15,
-            maxTime: 25,
-            minQuestion: 0,
-            maxQuestion: 1,
+            minTime: 10,
+            maxTime: 20,
             percentAnswer: 0.3,
             name: "🐣 - Dễ"
         },
         "medium": {
-            minTime: 10,
-            maxTime: 20,
-            minQuestion: 0.5,
-            maxQuestion: 1,
+            minTime: 5,
+            maxTime: 15,
             percentAnswer: 0.5,
             name: "🐥 - Trung bình"
         },
         "hard": {
             minTime: 5,
-            maxTime: 15,
-            minQuestion: 0.8,
-            maxQuestion: 1,
+            maxTime: 10,
             percentAnswer: 0.8,
             name: "🐔 - Khó"
         },
         "hell": {
             minTime: 1,
             maxTime: 3,
-            minQuestion: 1,
-            maxQuestion: 1,
             percentAnswer: 1,
             name: "🦅🦅🦅 - Địa ngục"
         }
