@@ -563,7 +563,7 @@ exports.requestAdmin = async (req, res) => {
             user.updated_at = moment().format();
             user.timestamp = moment().unix();
             await user.save();
-            return res.status(200).json({ message: "Request admin success" });
+            return res.status(200).json({ success: true, message: "Request admin success" });
         }
     } catch (error) {
         console.log("USERS_REQUEST_ADMIN_ERROR", error)
