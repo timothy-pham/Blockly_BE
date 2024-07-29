@@ -15,6 +15,8 @@ router.get("/students", authorize(['admin', 'teacher', 'parent']), controller.ge
 
 router.get("/:id", controller.getUserById);
 
+router.post("/request-admin", controller.requestAdmin);
+
 router.post("/addStudentToTeacher/:teacher_id", authorize(['admin']), controller.addStudentToTeacher);
 
 router.post("/removeStudentFromTeacher/:teacher_id", authorize(['admin']), controller.removeStudentFromTeacher);

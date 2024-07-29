@@ -545,3 +545,28 @@ exports.removeStudentFromParent = async (req, res) => {
         res.status(500).json({ message: error });
     }
 }
+
+
+exports.requestAdmin = async (req, res) => {
+    try {
+        const { key } = req.body;
+        const userData = req.user
+        const adminKey = process.env.ADMIN_KEY;
+        if (!key || key !== adminKey) {
+            return res.status(400).json({ message: "Invalid admin key" });
+        } else {
+            const user = await User.findOne({ user_id: userData.user_id });
+            if (!user) {
+                return res.status(404).json({ message: "User not found" });
+            }
+            user.role = 'admin';
+            user.updated_at = moment().format();
+            user.timestamp = moment().unix();
+            await user.save();
+            return res.status(200).json({ message: "Request admin success" });
+        }
+    } catch (error) {
+        console.log("USERS_REQUEST_ADMIN_ERROR", error)
+        return res.status(500).json({ message: error });
+    }
+}

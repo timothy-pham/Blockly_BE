@@ -30,6 +30,7 @@ services:
       DATABASE_URL: mongodb://root:timothydatonsthanhson@blockly-db:27018/blockly?authSource=admin
       PORT: 8000
       ENCRYPT_KEY: datons2024emforem
+      ADMIN_KEY: 4D63458A41E6FA6CEF24BE6F57E27
     depends_on:
       - blockly-db
     networks:
