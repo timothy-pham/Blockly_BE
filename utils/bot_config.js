@@ -1,26 +1,25 @@
 const botConfig = {
     names: [
-        "Chử Ngọc Ẩn",
-        "Mai Tấn Dũng",
-        "Lương Tuấn Khanh",
-        "Phạm Quốc Văn",
-        "Thạch Hồng Ðăng",
-        "Mã Việt Cường",
-        "Tôn Cường Thịnh",
-        "Huỳnh Ngọc Sơn",
-        "Võ Tường Anh",
-        "Đặng Hoài Tín",
-        "Nguyễn Thanh Ngọc",
-        "Ngô Bảo Tiên",
-        "Hoàng Thanh Hà",
-        "Huỳnh Thu Sương",
-        "Đặng Ý Lan",
-        "Lâm Kiều Thu",
-        "Hoàng Kim Hòa",
-        "Hàn Ái Vân",
-        "Cao Ngọc Oanh",
-        "Hà Nhã Lý"
-    ],
+        "Lý Liên Kiệt",
+        "Triệu Vy",
+        "Cảnh Điềm",
+        "Châu Tấn",
+        "Huỳnh Hiểu Minh",
+        "Dương Mịch",
+        "Lưu Diệc Phi",
+        "Ngô Kỳ Long",
+        "Tôn Lệ",
+        "Đặng Siêu",
+        "Chân Tử Đan",
+        "Tôn Tử Khánh",
+        "Trương Thiết Hạn",
+        "Trịnh Sảng",
+        "Hứa Vỹ Luân",
+        "Ngô Thiến",
+        "Từ Chính Khê",
+        "Phùng Thiệu Phong",
+        "Lý Băng Băng",
+        "Trương Hàn"],
     levels: {
         "easy": {
             minTime: 10,
@@ -41,10 +40,10 @@ const botConfig = {
             name: "🐔 - Khó"
         },
         "hell": {
-            minTime: 1,
-            maxTime: 3,
+            minTime: 2,
+            maxTime: 4,
             percentAnswer: 1,
-            name: "🦅🦅🦅 - Địa ngục"
+            name: "🦅 - Địa ngục"
         }
     },
     defaultLevel: "easy",

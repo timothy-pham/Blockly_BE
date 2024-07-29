@@ -663,6 +663,9 @@ exports.addBot = async (room_id, data) => {
         }
         const name = botConfig.names[Math.floor(Math.random() * botConfig.names.length)] + " " + botConfig.levels[data.bot_level].name.split(" - ")[0];
         const count = room.users.find(u => u.user_id.toString().includes("bot_")) ? room.users.filter(u => u.user_id.toString().includes("bot_")).length : 0;
+        // get random 1 - 5
+        const random = Math.floor(Math.random() * 5) + 1;
+        const avatar = "/bot_avatar/" + `${data.bot_level}_${random}.jpg`;
         const user = {
             user_id: "bot_" + count,
             user_data: {
@@ -670,7 +673,7 @@ exports.addBot = async (room_id, data) => {
                 user_id: "bot_" + count,
                 role: "student",
                 meta_data: {
-                    avatar: "/bot_avatar.jpg",
+                    avatar: avatar,
                     points: 0,
                     matches: 0,
                 }
@@ -715,9 +718,9 @@ exports.handleBot = async (room_id, io) => {
                 bot_id,
                 bot_level,
                 bot_config,
-                room_id,
                 io
             }
+            // Run botAction concurrently
             botAction(bot_data);
         }
         return true;
@@ -730,23 +733,23 @@ exports.handleBot = async (room_id, io) => {
 const botAction = async (bot_data) => {
     try {
         const time = Math.floor(Math.random() * (bot_data.bot_config.maxTime - bot_data.bot_config.minTime + 1) + bot_data.bot_config.minTime);
-        console.log("BOT ACTION time", time)
+        // console.log("BOT ACTION time", time)
         const room = await Room.findOne({ room_id: bot_data.room_id });
         const blocks = room.meta_data.blocks;
         const bot_config = bot_data.bot_config;
-        console.log("BOT ACTION config", bot_config)
-        // wait 5 seconds
+        // console.log("BOT ACTION config", bot_config)
+
+        // Wait 5 seconds
         await new Promise((resolve) => {
             setTimeout(() => {
                 resolve();
             }, 5000);
         });
-        // Sử dụng for..of và await để đảm bảo thứ tự thực thi
+
+        // Process each block
         for (const block of blocks) {
             const percentAnswer = bot_config.percentAnswer * 100;
-
             const randomNum = Math.random() * 100;
-
             const is_True = randomNum <= percentAnswer;
 
             const data = {
@@ -755,15 +758,16 @@ const botAction = async (bot_data) => {
                 wrong: !is_True
             }
 
-            console.log("BOT DATA UPDATE", block.block_id, is_True, bot_data.bot_id)
+            // console.log("BOT DATA UPDATE", block.block_id, is_True, bot_data.bot_id)
 
             await new Promise((resolve) => {
                 setTimeout(async () => {
                     await updateRankingBot(bot_data.room_id, data, bot_data.io);
-                    resolve(); // Đánh dấu công việc đã hoàn thành
+                    resolve();
                 }, time * 1000);
             });
         }
+
         const finishData = await userFinishhandle(bot_data.room_id, bot_data.bot_id, {});
         if (finishData) {
             bot_data.io.to(bot_data.room_id).emit("user_finish", finishData);
@@ -774,7 +778,7 @@ const botAction = async (bot_data) => {
                 }
             });
             if (isAllFinished) {
-                await this.endGameNow(bot_data.room_id, bot_data.io);
+                await endGameNow(bot_data.room_id, bot_data.io);
             }
         }
     } catch (error) {
@@ -783,70 +787,92 @@ const botAction = async (bot_data) => {
     }
 }
 
-
 const updateRankingBot = async (room_id, data, io) => {
     try {
-        const { block, user_id, wrong } = data;
-        let room = await Room.findOne({ room_id });
-        if (!room) {
-            return false;
-        } else {
-            if (room.status !== 'playing') {
-                return false;
-            }
-            let totalQuestion = room.meta_data?.count || 5;
-            if (!wrong) {
-                let has_winner = false;
-                const users = room.users.map(u => {
-                    if (u.user_id === user_id && !u.blocks.includes(block.block_id)) {
-                        u.blocks = [...u.blocks, block.block_id];
-                        u.score += 1;
-                        u.end_timestamp = moment().unix();
-                        u.end_time = moment().diff(moment(room.meta_data.started_at), 'milliseconds');
-                        if (u.score >= totalQuestion) {
-                            has_winner = u;
-                        }
-                    }
-                    return u;
-                });
-                room.users = users;
-                if (has_winner?.user_id) {
-                    room.status = 'finished';
-                    room.meta_data = {
-                        ...room.meta_data,
-                        winner: has_winner
-                    }
-                    await room.save();
-                    const data = await updatePoints(room);
-                    io.to(room_id).emit("end_game", data);
-                    winner = has_winner;
-                    io.emit("new_winner", { user: winner, room_id: room_id })
-                    io.emit("refresh_rooms");
+        const retryLimit = 3;
+        let retryCount = 0;
+        let success = false;
+
+        while (!success && retryCount < retryLimit) {
+            try {
+                const { block, user_id, wrong } = data;
+                let room = await Room.findOne({ room_id });
+                if (!room) {
+                    return false;
                 } else {
-                    await room.save();
+                    if (room.status !== 'playing') {
+                        return false;
+                    }
+                    let totalQuestion = room.meta_data?.count || 5;
+                    if (!wrong) {
+                        let has_winner = false;
+                        const users = room.users.map(u => {
+                            if (u.user_id === user_id && !u.blocks.includes(block.block_id)) {
+                                u.blocks = [...u.blocks, block.block_id];
+                                u.score += 1;
+                                u.end_timestamp = moment().unix();
+                                u.end_time = moment().diff(moment(room.meta_data.started_at), 'milliseconds');
+                                if (u.score >= totalQuestion) {
+                                    has_winner = u;
+                                }
+                            }
+                            return u;
+                        });
+                        room.users = users;
+                        if (has_winner?.user_id) {
+                            room.status = 'finished';
+                            room.meta_data = {
+                                ...room.meta_data,
+                                winner: has_winner
+                            }
+                            await room.save();
+                            const data = await updatePoints(room);
+                            io.to(room_id).emit("end_game", data);
+                            winner = has_winner;
+                            io.emit("new_winner", { user: winner, room_id: room_id })
+                            io.emit("refresh_rooms");
+                        } else {
+                            await room.save();
+                        }
+                    } else {
+                        const userIndex = room.users.findIndex(u => u.user_id === user_id);
+                        if (userIndex === -1) {
+                            return false;
+                        }
+                        let user = room.users[userIndex];
+                        user.wrong_answers[block.block_id] = 3;
+                        user.blocks.push(block.block_id);
+                        room.users[userIndex] = user;
+
+                        await Room.updateOne(
+                            { room_id, 'users.user_id': user_id },
+                            {
+                                '$set': {
+                                    'users.$': user
+                                }
+                            }
+                        );
+                    }
+                    io.to(room_id).emit("ranking_update", room);
+                    success = true;
                 }
-            } else {
-                const userIndex = room.users.findIndex(u => u.user_id === user_id);
-                if (userIndex === -1) {
+            } catch (error) {
+                if (error.name === 'VersionError') {
+                    retryCount++;
+                    console.log(`Retry ${retryCount} for updateRankingBot due to version conflict`);
+                } else {
+                    console.log("UPDATE RANKING BOT ERROR", error);
                     return false;
                 }
-                let user = room.users[userIndex];
-                user.wrong_answers[block.block_id] = 3;
-                user.blocks.push(block.block_id);
-                room.users[userIndex] = user; // Updating the user in the array
-
-                await Room.updateOne(
-                    { room_id, 'users.user_id': user_id },
-                    {
-                        '$set': {
-                            'users.$': user
-                        }
-                    }
-                );
             }
-            io.to(room_id).emit("ranking_update", room);
+        }
+
+        if (!success) {
+            console.log("Failed to update ranking after multiple retries");
+            return false;
         }
     } catch (error) {
+        console.log("UPDATE RANKING BOT ERROR", error);
         return false
     }
 }
