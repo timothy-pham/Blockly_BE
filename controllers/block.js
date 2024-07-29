@@ -284,6 +284,7 @@ exports.searchBlocks = async (req, res) => {
                     __v: 0,
                     _id: 0,
                     timestamp: 0,
+                    answers: 0
                 }
             }
         ]);
