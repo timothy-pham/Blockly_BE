@@ -179,7 +179,7 @@ exports.searchGroups = async (req, res) => {
 
 exports.exportGroups = async (req, res) => {
     try {
-        const { ids, raw_data } = req.body.ids;
+        const { ids, raw_data } = req.body;
         // Fetch all groups
         let groups = await Group.find(
             ids && ids.length > 0 ? { group_id: { $in: ids } } : {}

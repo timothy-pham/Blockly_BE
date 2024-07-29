@@ -108,7 +108,7 @@ exports.deleteCollection = async (req, res) => {
 
 exports.exportCollection = async (req, res) => {
     try {
-        const { ids, raw_data } = req.body.ids;
+        const { ids, raw_data } = req.body;
         // Fetch all collections
         let collections = await Collection.find(
             ids && ids.length > 0 ? { collection_id: { $in: ids } } : {}
