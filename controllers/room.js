@@ -157,15 +157,18 @@ exports.joinRoom = async (room_id, user_id) => {
 
 exports.leaveRoom = async (room_id, user_id) => {
     try {
-        const room = await Room.findOne({ room_id })
+        let room = await Room.findOne({ room_id })
         if (!room) {
-            return;
+            return false;
         } else {
             const users = room.users;
+            let is_host = false;
             users.forEach(u => {
                 if (u.user_id === user_id) {
                     u.is_connected = false;
-                    const is_ready = u.is_ready;
+                    if (u.is_host) {
+                        is_host = true;
+                    }
                     room.meta_data = {
                         ...room.meta_data,
                         total_users: room.meta_data.total_users - 1
@@ -180,13 +183,15 @@ exports.leaveRoom = async (room_id, user_id) => {
                     isAllDisconnected = false;
                 }
             });
-            if (isAllDisconnected) {
+            if (isAllDisconnected || is_host) {
                 room.status = 'finished';
             }
             await room.save();
+            return room;
         }
     } catch (error) {
         console.log("LEAVE ROOM ERROR", error);
+        return false
     }
 }
 

@@ -74,6 +74,19 @@ const deleteWaitingRooms = async () => {
     }
 }
 
+const deleteAllRoomsInterval = async (io) => {
+    try {
+        const job = async () => {
+            const result = await Room.deleteMany({ status: 'waiting', created_at: { $lt: new Date(Date.now() - 15 * 60000) } });
+            console.log(`JOB: Deleted ${result.deletedCount} rooms with status 'waiting'`);
+            io.emit("refresh_rooms");
+        }
+        setInterval(job, 15 * 60000);
+    } catch (error) {
+        console.error('Error deleting rooms with status finished', error);
+    }
+}
+
 const PORT = process.env.PORT || 8000;
 const server = http.createServer(app); // Create the server using the HTTP module
 
@@ -87,7 +100,6 @@ const io = socketIO(server, {
         methods: ["GET", "POST"]
     }
 });
-
 
 const onlineUsers = {};
 io.on('connection', (socket) => {
@@ -119,6 +131,22 @@ io.on('connection', (socket) => {
             }
         } catch (error) {
             console.error("Error joining room:", error);
+        }
+    });
+
+    socket.on("leave_room", async (data) => {
+        try {
+            const roomData = await roomController.leaveRoom(socket.room_id, socket.user_id);
+            if (roomData && roomData.status == 'waiting') {
+                io.to(socket.room_id).emit("user_left", socket.user_id);
+                io.to(socket.room_id).emit("receive_messages", [
+                    { user_id: data?.user_id, message: `${data.user?.name} đã rời khỏi phòng!` }
+                ]);
+            } else {
+                io.emit("refresh_rooms");
+            }
+        } catch (error) {
+
         }
     });
 
@@ -237,11 +265,12 @@ io.on('connection', (socket) => {
 
     // DISCONNECT
     socket.on('disconnect', () => {
+        console.log("DISCONNECT", socket.id);
         delete onlineUsers[socket.id];
         io.onlineUsers = onlineUsers;
-        console.log(`User Disconect - UserID: ${socket.user_id}, Room ID: ${socket.room_id}`);
-        roomController.leaveRoom(socket.room_id, socket.user_id);
-        io.to(socket.room_id).emit("user_left", socket.user_id);
+        // console.log(`User Disconect - UserID: ${socket.user_id}, Room ID: ${socket.room_id}`);
+        // roomController.leaveRoom(socket.room_id, socket.user_id);
+        // io.to(socket.room_id).emit("user_left", socket.user_id);
     });
 });
 
@@ -265,3 +294,5 @@ app.use("/histories", authenticate, require("./routes/histories"));
 app.use("/rooms", authenticate, require("./routes/room"));
 app.use("/notifications", authenticate, require("./routes/notifications"));
 app.use("/messages", authenticate, require("./routes/message"));
+
+deleteAllRoomsInterval(io);
