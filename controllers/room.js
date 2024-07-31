@@ -202,7 +202,7 @@ exports.userReady = async (room_id, user_id, is_ready) => {
                     u.is_ready = is_ready;
                 }
             });
-            console.log("Room meta data", room.meta_data)
+            // console.log("Room meta data", room.meta_data)
             room.users = users;
             await room.save();
             return room;
@@ -295,7 +295,7 @@ exports.updateRanking = async (room_id, data, io) => {
             if (room.status !== 'playing') {
                 return false;
             }
-            let totalQuestion = room.meta_data?.count || 5;
+            let totalQuestion = room.meta_data?.count || room.meta_data.blocks?.length;
 
             let has_winner = false;
             const users = room.users.map(u => {
@@ -803,7 +803,7 @@ const updateRankingBot = async (room_id, data, io) => {
                     if (room.status !== 'playing') {
                         return false;
                     }
-                    let totalQuestion = room.meta_data?.count || 5;
+                    let totalQuestion = room.meta_data?.count || room.meta_data.blocks?.length;
                     if (!wrong) {
                         let has_winner = false;
                         const users = room.users.map(u => {
