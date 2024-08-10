@@ -118,6 +118,9 @@ exports.resetPassword = async (req, res) => {
     try {
         const userRequestRole = req.user.role;
         const { username, password } = req.body;
+        if (password?.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters" });
+        }
         const user = await User.findOne({ username });
         if (userRequestRole != 'admin' && user.user_id != req.user.user_id) {
             return res.status(403).json({ message: "Forbidden" });

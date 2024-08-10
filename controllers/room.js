@@ -9,13 +9,21 @@ const { botConfig } = require("../utils/bot_config");
 
 exports.getAllRooms = async (req, res) => {
     try {
+        const { all } = req.query;
+        const userRequestRole = req.user.role;
+        const match = all && userRequestRole == 'admin' ? {} : {
+            $or: [
+                { status: 'waiting' },
+                { status: 'playing' }
+            ]
+        }
         const rooms = await Room.aggregate([
             {
-                $match: {
-                    $or: [
-                        { status: 'waiting' },
-                        { status: 'playing' }
-                    ]
+                $match: match
+            },
+            {
+                $sort: {
+                    room_id: -1
                 }
             }
         ]);
@@ -89,7 +97,23 @@ exports.createRoom = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 }
-
+exports.markRoomFinished = async (req, res) => {
+    try {
+        const { ids } = req.body;
+        const io = req.io;
+        const result = await Room.updateMany({ room_id: { $in: ids } }, { status: 'finished' });
+        if (result?.modifiedCount > 0) {
+            io.emit("refresh_rooms");
+            res.status(200).json({ message: result?.modifiedCount + "rooms marked as finished" });
+        }
+        else {
+            res.status(404).json({ message: "Rooms not found" });
+        }
+    } catch (error) {
+        console.log("MARK ROOM FINISHED ERROR", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
 exports.getUsersOnline = async (req, res) => {
     try {
         const io = req.io;
