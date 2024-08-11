@@ -106,7 +106,11 @@ exports.updateUser = async (req, res) => {
             if (role) user.role = role;
         }
 
-        if (name) user.name = name;
+        if (name && name.length <= 20 && name.length >= 3) {
+            user.name = name;
+        } else {
+            return res.status(400).json({ message: "Name must be less than 20 characters and more than 3 characters" });
+        }
         if (email) user.email = email;
         if (meta_data) user.meta_data = {
             ...user.meta_data,

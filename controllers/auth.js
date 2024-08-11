@@ -11,18 +11,12 @@ exports.register = async (req, res) => {
     try {
         let { name, username, password } = req.body;
         username = username.toLowerCase();
-        if (username.length < 6) {
-            return res.status(400).json({ message: "Username must be at least 6 characters" });
-        } else if (name.length < 6) {
-            return res.status(400).json({ message: "Name must be at least 6 characters" });
-        } else if (password.length < 6) {
-            return res.status(400).json({ message: "Password must be at least 6 characters" });
-        } else if (username.length > 20) {
-            return res.status(400).json({ message: "Username must be less than 20 characters" });
-        } else if (name.length > 20) {
-            return res.status(400).json({ message: "Name must be less than 20 characters" });
-        } else if (password.length > 20) {
-            return res.status(400).json({ message: "Password must be less than 20 characters" });
+        if (username.length < 6 || username.length > 20) {
+            return res.status(400).json({ message: "Username must be at least 6 characters and less than 20 characters" });
+        } else if (name.length < 3 || name.length > 20) {
+            return res.status(400).json({ message: "Name must be at least 3 characters and less than 20 characters" });
+        } else if (password.length < 6 || password.length > 20) {
+            return res.status(400).json({ message: "Password must be at least 6 characters and less than 20 characters" });
         }
         const existingUser = await User.findOne({ username });
         if (existingUser) {
