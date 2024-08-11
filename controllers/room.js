@@ -271,6 +271,7 @@ exports.startGame = async (room_id, user_id) => {
                 console.log("NO GROUP")
                 return false;
             }
+            const size = room?.meta_data?.count || 5;
             const blocks = await Block.aggregate([
                 {
                     $match: {
@@ -278,7 +279,7 @@ exports.startGame = async (room_id, user_id) => {
                     }
                 },
                 {
-                    $sample: { size: 5 }
+                    $sample: { size: size }
                 },
                 {
                     $project: {
