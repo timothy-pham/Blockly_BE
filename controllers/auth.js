@@ -13,9 +13,16 @@ exports.register = async (req, res) => {
         username = username.toLowerCase();
         if (username.length < 6) {
             return res.status(400).json({ message: "Username must be at least 6 characters" });
-        }
-        if (password.length < 6) {
+        } else if (name.length < 6) {
+            return res.status(400).json({ message: "Name must be at least 6 characters" });
+        } else if (password.length < 6) {
             return res.status(400).json({ message: "Password must be at least 6 characters" });
+        } else if (username.length > 20) {
+            return res.status(400).json({ message: "Username must be less than 20 characters" });
+        } else if (name.length > 20) {
+            return res.status(400).json({ message: "Name must be less than 20 characters" });
+        } else if (password.length > 20) {
+            return res.status(400).json({ message: "Password must be less than 20 characters" });
         }
         const existingUser = await User.findOne({ username });
         if (existingUser) {
@@ -120,6 +127,8 @@ exports.resetPassword = async (req, res) => {
         const { username, password } = req.body;
         if (password?.length < 6) {
             return res.status(400).json({ message: "Password must be at least 6 characters" });
+        } else if (password?.length > 20) {
+            return res.status(400).json({ message: "Password must be less than 20 characters" });
         }
         const user = await User.findOne({ username });
         if (userRequestRole != 'admin' && user.user_id != req.user.user_id) {
