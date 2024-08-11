@@ -70,6 +70,12 @@ exports.getBotConfig = async (req, res) => {
 exports.createRoom = async (req, res) => {
     try {
         const { name, description, meta_data } = req.body;
+        let count = meta_data?.count || 5;
+        if (count > 10) {
+            count = 10;
+        } else if (count < 3) {
+            count = 3;
+        }
         const user = req.user;
         const room = new Room({
             name,
@@ -85,6 +91,7 @@ exports.createRoom = async (req, res) => {
             }],
             meta_data: {
                 ...meta_data,
+                count,
                 total_users: 1,
             }
         });
