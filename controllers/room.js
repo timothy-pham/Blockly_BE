@@ -322,6 +322,26 @@ exports.startGame = async (room_id, user_id) => {
     }
 }
 
+const checkFinishToEndGame = async (room_id, io) => {
+    try {
+        let isAllFinished = true;
+        const room = await Room.findOne({ room_id });
+        if (!room) {
+            return false;
+        }
+        room.users.forEach(user => {
+            if (user.status !== 'finished' && user.is_ready) {
+                isAllFinished = false;
+            }
+        });
+        if (isAllFinished) {
+            await endGameHandle(room_id, io);
+        }
+    } catch (error) {
+
+    }
+}
+
 exports.updateRanking = async (room_id, data, io) => {
     try {
         const { block, user_id } = data;
@@ -335,6 +355,7 @@ exports.updateRanking = async (room_id, data, io) => {
             let totalQuestion = room.meta_data?.count || room.meta_data.blocks?.length;
 
             let has_winner = false;
+            let needCheckFinish = false;
             const users = room.users.map(u => {
                 if (u.user_id === user_id && !u.blocks.includes(block.block_id)) {
                     u.blocks = [...u.blocks, block.block_id];
@@ -344,9 +365,14 @@ exports.updateRanking = async (room_id, data, io) => {
                     if (u.score >= totalQuestion) {
                         has_winner = u;
                     }
+                    if (u.blocks.length >= totalQuestion) {
+                        u.status = 'finished';
+                        needCheckFinish = true;
+                    }
                 }
                 return u;
             });
+
             room.users = users;
             if (has_winner?.user_id) {
 
@@ -357,12 +383,14 @@ exports.updateRanking = async (room_id, data, io) => {
                 }
                 await room.save();
                 const data = await updatePoints(room);
+                needCheckFinish && await checkFinishToEndGame(room_id, io);
                 io.to(room_id).emit("end_game", data);
                 winner = has_winner;
                 io.emit("new_winner", { user: winner, room_id: room_id })
                 io.emit("refresh_rooms");
             } else {
                 await room.save();
+                needCheckFinish && await checkFinishToEndGame(room_id, io);
                 return room;
             }
         }
@@ -381,6 +409,7 @@ exports.updateWrong = async (room_id, data, io) => {
             if (room.status !== 'playing') {
                 return false;
             }
+            let totalQuestion = room.meta_data?.count || room.meta_data.blocks?.length;
             const userIndex = room.users.findIndex(u => u.user_id === user_id);
             if (userIndex === -1) {
                 return false;
@@ -393,8 +422,13 @@ exports.updateWrong = async (room_id, data, io) => {
             } else {
                 user.wrong_answers[block.block_id] = newCount;
             }
-            if (newCount === 3 || block?.skip) {
+            if (newCount >= 3 || block?.skip) {
                 user.blocks.push(block.block_id);
+            }
+            let needCheckFinish = false;
+            if (user.blocks.length >= totalQuestion) {
+                user.status = 'finished';
+                needCheckFinish = true;
             }
 
             room.users[userIndex] = user; // Updating the user in the array
@@ -407,7 +441,7 @@ exports.updateWrong = async (room_id, data, io) => {
                     }
                 }
             );
-
+            needCheckFinish && await checkFinishToEndGame(room_id, io);
             return room;
         }
     } catch (error) {
@@ -815,7 +849,7 @@ const botAction = async (bot_data) => {
                 }
             });
             if (isAllFinished) {
-                await endGameNow(bot_data.room_id, bot_data.io);
+                await endGameHandle(bot_data.room_id, bot_data.io);
             }
         }
     } catch (error) {
@@ -823,6 +857,8 @@ const botAction = async (bot_data) => {
         return false;
     }
 }
+
+
 
 const updateRankingBot = async (room_id, data, io) => {
     try {
