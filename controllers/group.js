@@ -162,8 +162,22 @@ exports.searchGroups = async (req, res) => {
                 }
             },
             {
+                $lookup: {
+                    from: "blocks",
+                    localField: "group_id",
+                    foreignField: "group_id",
+                    as: "blocks"
+                }
+            },
+            {
+                $addFields: {
+                    total_blocks: { $size: "$blocks" }
+                }
+            },
+            {
                 $project: {
-                    collection_id: 0
+                    collection_id: 0,
+                    blocks: 0
                 }
             },
             {

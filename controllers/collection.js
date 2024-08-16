@@ -8,7 +8,43 @@ const encryptKey = process.env.ENCRYPT_KEY;
 
 exports.getAllCollections = async (req, res) => {
     try {
-        const collections = await Collection.find();
+
+        // include total number of groups  and blocks in each collection
+        const collections = await Collection.aggregate([
+            {
+                $lookup: {
+                    from: "groups",
+                    localField: "collection_id",
+                    foreignField: "collection_id",
+                    as: "groups"
+                }
+            },
+            {
+                $addFields: {
+                    total_groups: { $size: "$groups" }
+                }
+            },
+            {
+                $lookup: {
+                    from: "blocks",
+                    //  group_id in groups collection is the foreign key to _id in blocks collection
+                    localField: "groups.group_id",
+                    foreignField: "group_id",
+                    as: "blocks"
+                }
+            },
+            {
+                $addFields: {
+                    total_blocks: { $size: "$blocks" }
+                }
+            },
+            {
+                $project: {
+                    blocks: 0,
+                    groups: 0
+                }
+            }
+        ]);
         res.status(200).json(collections);
     } catch (error) {
         console.log("BLOCKS_GET_ERROR", error)
