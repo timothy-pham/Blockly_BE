@@ -51,17 +51,30 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // Database - Connect
 const Room = require('./models/room');
 const db_url = process.env.DATABASE_URL || "mongodb://root:timothydatonsthanhson@localhost:27018/blockly?authSource=admin";
-console.log('Connecting to database:', db_url);
-mongoose.connect(db_url, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => {
-    console.log('Kết nối cơ sở dữ liệu thành công');
-    deleteWaitingRooms();
-}).catch((error) => {
-    console.error('Lỗi kết nối cơ sở dữ liệu:', error);
-});
+const maxRetries = 5;
+const retryDelay = 5000;
 
+function connectToDatabase(attempt = 1) {
+    console.log(`Connecting to database (Attempt ${attempt}/${maxRetries}):`, db_url);
+
+    mongoose.connect(db_url, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    }).then(() => {
+        console.log('Kết nối cơ sở dữ liệu thành công');
+        deleteWaitingRooms();
+    }).catch((error) => {
+        console.error('Lỗi kết nối cơ sở dữ liệu:', error);
+        if (attempt < maxRetries) {
+            console.log(`Retrying connection in ${retryDelay / 1000} seconds...`);
+            setTimeout(() => connectToDatabase(attempt + 1), retryDelay);
+        } else {
+            console.error('Exceeded maximum retry attempts. Could not connect to the database.');
+        }
+    });
+}
+
+connectToDatabase();
 const deleteWaitingRooms = async () => {
     try {
         const result = await Room.deleteMany({ status: 'waiting' });

@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = require('../configs/auth').JWT_SECRET;
 const JWT_EXPIRATION = require('../configs/auth').JWT_EXPIRATION;
-
+const User = require('../models/user');
 exports.generateToken = (user) => {
     try {
         return jwt.sign({
@@ -34,17 +34,26 @@ exports.decodeToken = (token) => {
     }
 };
 
-exports.authenticate = (req, res, next) => {
-    const token = req.headers.authorization;
-    if (!token) {
+exports.authenticate = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization;
+        if (!token) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        const userTokenData = verifyToken(token.split(" ")[1]);
+        const user = await User.aggregate([
+            { $match: { user_id: parseInt(userTokenData.user_id) } },
+            { $project: { password: 0 } }
+        ])
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        req.user = user[0];
+        next();
+    } catch (error) {
+        console.log("JWT_ERROR", error);
         return res.status(401).json({ message: "Unauthorized" });
     }
-    const user = verifyToken(token.split(" ")[1]);
-    if (!user) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-    req.user = user;
-    next();
 };
 
 exports.authorize = (roles) => {

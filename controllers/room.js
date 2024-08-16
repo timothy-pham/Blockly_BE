@@ -589,8 +589,6 @@ exports.getRoomHistoriesStudents = async (req, res) => {
 exports.getUserHistories = async (req, res) => {
     try {
         const user_id = req.params.user_id;
-        // room is finished and have winner and room.users have user_id
-        console.log("GET USER HISTORY", user_id)
         const rooms = await Room.aggregate([
             {
                 $match: {
@@ -610,9 +608,108 @@ exports.getUserHistories = async (req, res) => {
     }
 }
 
+exports.getUserStatistics = async (req, res) => {
+    try {
+        const user_id = parseInt(req.params.user_id);
+        const data = {
+            total_matches: 0,
+            total_scores: 0,
+            total_time: 0,
+            avg_scores: 0,
+            avg_time: 0,
+            avg_rank: 0,
+            total_points: req.user?.meta_data?.points || 0,
+        };
+
+
+
+        const rooms = await Room.aggregate([
+            {
+                $match: {
+                    status: 'finished',
+                    'meta_data.winner': { $exists: true },
+                    'users.user_id': user_id
+                }
+            },
+            {
+                $unwind: "$users"
+            },
+            {
+                $match: {
+                    "users.user_id": user_id
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total_matches: { $sum: 1 },
+                    total_scores: { $sum: "$users.score" },
+                    total_time: {
+                        $sum: { $divide: [{ $toDouble: "$users.end_time" }, 1000] }
+                    },
+                    avg_scores: { $avg: "$users.score" },
+                    avg_time: { $avg: { $divide: [{ $toDouble: "$users.end_time" }, 1000] } },
+                    max_score: { $max: "$users.score" }
+                }
+            },
+            {
+                $lookup: {
+                    from: "rooms",
+                    let: { user_id: user_id, max_score: "$max_score" },
+                    pipeline: [
+                        { $unwind: "$users" },
+                        { $match: { $expr: { $and: [{ $ne: ["$users.user_id", "$$user_id"] }, { $eq: ["$users.score", "$$max_score"] }] } } },
+                        { $sort: { "users.score": -1 } },
+                        { $group: { _id: null, rank: { $sum: 1 } } }
+                    ],
+                    as: "ranking"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$ranking",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    total_matches: 1,
+                    total_scores: 1,
+                    total_time: 1,
+                    avg_scores: 1,
+                    avg_time: 1,
+                    avg_rank: {
+                        $cond: {
+                            if: { $eq: [{ $type: "$ranking" }, "missing"] },
+                            then: 0,
+                            else: {
+                                $divide: [{ $toDouble: "$ranking.rank" }, "$total_matches"]
+                            }
+                        }
+                    }
+                }
+            }
+        ]);
+
+        if (rooms.length > 0) {
+            data.total_matches = rooms[0].total_matches;
+            data.total_scores = rooms[0].total_scores;
+            data.total_time = rooms[0].total_time;
+            data.avg_scores = rooms[0].avg_scores;
+            data.avg_time = rooms[0].avg_time;
+            data.avg_rank = rooms[0].avg_rank;
+        }
+
+        res.status(200).json(data);
+    } catch (error) {
+        console.log("GET USER STATISTICS ERROR", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 const updatePoints = async (room_input) => {
     try {
-        console.log("UPDATE POINTS", room_input.room_id)
         let room = await Room.findOne({ room_id: room_input.room_id });
         if (room.status == 'waiting' || room.status == 'playing') {
             return;
