@@ -330,7 +330,9 @@ const checkFinishToEndGame = async (room_id, io) => {
             return false;
         }
         room.users.forEach(user => {
+            console.log("USER STATUS", user.user_data.name, user.status, user.is_ready)
             if (user.status !== 'finished' && user.is_ready) {
+                console.log("USER NOT FINISHED", user.user_data.name)
                 isAllFinished = false;
             }
         });
@@ -941,7 +943,7 @@ const botAction = async (bot_data) => {
             bot_data.io.to(bot_data.room_id).emit("user_finish", finishData);
             let isAllFinished = true;
             finishData.users.forEach(user => {
-                if (user.status !== 'finished') {
+                if (user.status !== 'finished' && user.is_ready) {
                     isAllFinished = false;
                 }
             });
