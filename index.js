@@ -307,5 +307,6 @@ app.use("/histories", authenticate, require("./routes/histories"));
 app.use("/rooms", authenticate, require("./routes/room"));
 app.use("/notifications", authenticate, require("./routes/notifications"));
 app.use("/messages", authenticate, require("./routes/message"));
+app.use("/tickets", authenticate, require("./routes/ticket"));
 
 deleteAllRoomsInterval(io);
