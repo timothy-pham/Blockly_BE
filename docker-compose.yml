@@ -31,6 +31,28 @@ services:
       PORT: 8000
       ENCRYPT_KEY: datons2024emforem
       ADMIN_KEY: 4D63458A41E6FA6CEF24BE6F57E27
+      JWT_SECRET: datons2024bandforband
+    depends_on:
+      - blockly-db
+    networks:
+      - blockly-network
+    restart: always
+
+  blockly-be-clone:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    container_name: blockly-be-clone
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: mongodb://root:timothydatonsthanhson@blockly-db:27018/blockly-clone?authSource=admin
+      PORT: 8001
+      ENCRYPT_KEY: datons2024emforem
+      ADMIN_KEY: 4D63458A41E6FA6CEF24BE6F57E27
+      JWT_SECRET: datons2024emforem
     depends_on:
       - blockly-db
     networks:

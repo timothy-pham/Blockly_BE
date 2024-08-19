@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = require('../configs/auth').JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRATION = require('../configs/auth').JWT_EXPIRATION;
 const User = require('../models/user');
 exports.generateToken = (user) => {

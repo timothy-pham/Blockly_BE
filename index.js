@@ -27,7 +27,7 @@ const options = {
 
         servers: [
             {
-                "url": "https://api.timothypham.io.vn",
+                "url": `http://localhost:${process.env.PORT || 8000}`,
                 "description": "Production server"
             }
         ],
