@@ -180,53 +180,44 @@ exports.getHistoryById = async (req, res) => {
             },
             {
                 $lookup: {
-                    from: "rooms",
-                    localField: "room_id",
-                    foreignField: "room_id",
-                    as: "room"
+                    from: "collections",
+                    localField: "collection_id",
+                    foreignField: "collection_id",
+                    as: "collection"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$collection",
+                    preserveNullAndEmptyArrays: true
                 }
             },
             {
                 $lookup: {
-                    from: "users",
-                    localField: "user_id",
-                    foreignField: "user_id",
-                    as: "user"
+                    from: "groups",
+                    localField: "group_id",
+                    foreignField: "group_id",
+                    as: "group"
                 }
             },
             {
                 $unwind: {
-                    path: "$room",
+                    path: "$group",
                     preserveNullAndEmptyArrays: true
                 }
             },
             {
-                $unwind: {
-                    path: "$user",
-                    preserveNullAndEmptyArrays: true
+                $lookup: {
+                    from: "blocks",
+                    localField: "group_id",
+                    foreignField: "group_id",
+                    as: "blocks"
                 }
             },
             {
                 $project: {
-                    histories_id: 1,
-                    type: 1,
-                    user_id: 0,
-                    room_id: 0,
-                    collection_id: 1,
-                    group_id: 1,
-                    result: 1,
-                    meta_data: 1,
-                    created_at: 1,
-                    updated_at: 1,
-                    timestamp: 1,
-                    room: {
-                        room_id: 1,
-                        name: 1
-                    },
-                    user: {
-                        user_id: 1,
-                        username: 1
-                    }
+                    collection_id: 0,
+                    group_id: 0
                 }
             }
         ]);
