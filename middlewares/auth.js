@@ -37,6 +37,7 @@ exports.decodeToken = (token) => {
 exports.authenticate = async (req, res, next) => {
     try {
         const token = req.headers.authorization;
+
         if (!token) {
             return res.status(401).json({ message: "Unauthorized" });
         }
@@ -49,6 +50,14 @@ exports.authenticate = async (req, res, next) => {
             return res.status(401).json({ message: "Unauthorized" });
         }
         req.user = user[0];
+        const adminToken = req.headers['admin-authorization'];
+        if (adminToken) {
+            const adminTokenData = verifyToken(adminToken.split(" ")[1]);
+            if (adminTokenData.role === 'admin') {
+                req.user.role = 'admin';
+                return next();
+            }
+        }
         next();
     } catch (error) {
         console.log("JWT_ERROR", error);

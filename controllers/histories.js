@@ -9,6 +9,7 @@ const moment = require('moment');
 exports.getAllHistory = async (req, res) => {
     try {
         const userRequest = req.user;
+        console.log("🚀 ~ file: histories.js ~ line 13 ~ exports.getAllHistory= ~ userRequest", userRequest)
         const histories = await History.aggregate([
             {
                 $match: {

@@ -84,6 +84,29 @@ exports.login = async (req, res) => {
     }
 };
 
+exports.guestToken = async (req, res) => {
+    try {
+        const { user_id } = req.body;
+        const user = await User.findOne({ user_id });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        const token = generateToken(user);
+        let refresh_token = null;
+        if (user.refresh_token) {
+            refresh_token = user.refresh_token;
+        } else {
+            refresh_token = nanoid(32);
+            user.refresh_token = refresh_token;
+            await user.save();
+        }
+        res.status(200).json({ token, refresh_token, user: { name: user.name, username: user.username, user_id: user.user_id, role: user.role, meta_data: user.meta_data } });
+    } catch (error) {
+        console.log("USERS_GUEST_TOKEN_ERROR", error)
+        res.status(500).json({ message: error });
+    }
+}
+
 exports.refreshToken = async (req, res) => {
     try {
         const { refresh_token } = req.body;
